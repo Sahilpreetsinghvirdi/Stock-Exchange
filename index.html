@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Exchange</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="dark">
+    <section id="authScreen" class="auth-screen">
+      <div class="auth-panel">
+        <div>
+          <p class="eyebrow">Private Market Desk</p>
+          <h1>Stock Exchange</h1>
+          <p class="muted">Sign in with a Gmail address to continue.</p>
+        </div>
+
+        <form id="loginForm" class="auth-form" autocomplete="on">
+          <label>
+            Gmail address
+            <input id="emailInput" type="email" autocomplete="email" placeholder="name@gmail.com" required />
+          </label>
+          <label>
+            Password
+            <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Password" required />
+          </label>
+          <p id="loginMessage" class="form-message" aria-live="polite"></p>
+          <button type="submit" class="primary-button">Enter exchange</button>
+        </form>
+      </div>
+    </section>
+
+    <div id="appShell" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <p class="eyebrow">Exchange Desk</p>
+          <div class="brand">
+            <span class="brand-mark">SE</span>
+            <div>
+              <strong>Stock Exchange</strong>
+              <small>Live paper trading</small>
+            </div>
+          </div>
+          <div class="sidebar-card">
+            <span>Market status</span>
+            <strong id="sidebarMarketState">Open</strong>
+            <small id="sidebarMarketTime">1 tick every 5 sec</small>
+          </div>
+        </div>
+
+        <div class="sidebar-middle">
+          <nav class="nav-list" aria-label="Main navigation">
+            <button class="nav-item active" type="button" data-view="dashboard">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /></svg>
+              </span>
+              <span>Dashboard</span>
+            </button>
+            <button class="nav-item" type="button" data-view="markets">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 3 5-7" /></svg>
+              </span>
+              <span>Markets</span>
+            </button>
+            <button class="nav-item" type="button" data-view="portfolio">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 7V5h8v2M5 8h14v12H5zM8 11h8M8 15h5" /></svg>
+              </span>
+              <span>Portfolio</span>
+            </button>
+            <button class="nav-item" type="button" data-view="news">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 4h10v16H7zM4 8h3M4 12h3M4 16h3M10 8h4M10 12h4M10 16h3" /></svg>
+              </span>
+              <span>News</span>
+            </button>
+            <button class="nav-item" type="button" data-view="upcoming">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.5.8-4 3.9.9 5.5-4.8-2.6-4.8 2.6.9-5.5-4-3.9 5.5-.8z" /></svg>
+              </span>
+              <span>Upcoming</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+          <p class="eyebrow">Local Account</p>
+          <button id="themeToggleButton" class="theme-toggle" type="button" aria-pressed="false">
+            <span class="theme-toggle-mark" aria-hidden="true"></span>
+            <span id="themeToggleLabel">Dark mode</span>
+          </button>
+          <div class="sidebar-account">
+            <span id="sidebarEmail">Not signed in</span>
+            <strong id="sidebarCash">$0.00 cash</strong>
+            <small>Saved in this browser</small>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p id="sessionLine" class="eyebrow">Account</p>
+            <h1 id="pageTitle">Overview</h1>
+          </div>
+          <div class="top-actions">
+            <button id="downloadReportButton" class="secondary-button" type="button">Download Report</button>
+            <button id="signOutButton" class="ghost-button" type="button">Sign out</button>
+          </div>
+        </header>
+
+        <section id="dashboardView" class="view active-view">
+          <div class="section-heading split-heading">
+            <div>
+              <p id="welcomeLine" class="muted"></p>
+              <p class="microcopy">Closed: 2:00 AM - 4:00 AM IST</p>
+            </div>
+            <span id="marketStatus" class="status-pill">OPEN</span>
+          </div>
+
+          <div class="section-heading stocks-heading">
+            <h3>Stocks</h3>
+            <button class="link-button" type="button" data-view-target="markets">All markets</button>
+          </div>
+          <div id="dashboardStocks" class="stock-strip"></div>
+
+          <div class="dashboard-grid">
+            <article class="panel chart-panel">
+              <div class="wealth-summary">
+                <div>
+                  <p class="muted">Portfolio value</p>
+                  <div class="value-line">
+                    <strong id="dashboardTotalValue">$0.00</strong>
+                    <span id="dashboardReturn" class="change-pill neutral">0.00% (24h)</span>
+                  </div>
+                  <p id="dashboardCashLine" class="muted"></p>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="wealthChart" width="900" height="330" aria-label="Portfolio value chart"></canvas>
+              </div>
+            </article>
+
+            <article class="panel watch-panel">
+              <div class="panel-title-row">
+                <h3>Market Watch</h3>
+                <span id="watchStatus" class="status-pill compact">OPEN</span>
+              </div>
+              <div id="marketWatchList" class="market-watch-list"></div>
+            </article>
+          </div>
+
+          <section class="holdings-section">
+            <div class="section-heading">
+              <h3>My Holdings</h3>
+              <p class="muted">Current stocks in this account</p>
+            </div>
+            <div id="dashboardHoldings" class="holdings-grid"></div>
+          </section>
+        </section>
+
+        <section id="marketsView" class="view">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="muted">Present rates, live ticks, and company details</p>
+            </div>
+            <span class="status-pill">1 tick / 5 sec</span>
+          </div>
+          <div id="marketsGrid" class="markets-grid"></div>
+        </section>
+
+        <section id="marketDetailView" class="view">
+          <div id="marketDetailContent"></div>
+        </section>
+
+        <section id="portfolioView" class="view">
+          <div class="section-heading split-heading">
+            <div>
+              <p id="portfolioSubtext" class="muted">Your holdings and available cash</p>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <p>Total value</p>
+              <strong id="portfolioTotalValue">$0.00</strong>
+              <span id="portfolioTotalChange" class="metric-note neutral">Since account start</span>
+            </article>
+            <article class="metric-card">
+              <p>Cash</p>
+              <strong id="portfolioCash">$0.00</strong>
+              <span class="metric-note">Available to trade</span>
+            </article>
+            <article class="metric-card">
+              <p>Invested</p>
+              <strong id="portfolioInvested">$0.00</strong>
+              <span class="metric-note">Current cost basis</span>
+            </article>
+          </div>
+
+          <section class="allocation-section">
+            <div class="section-heading">
+              <h3>Holdings Bar</h3>
+              <p class="muted">Allocation by current market value</p>
+            </div>
+            <div id="allocationBar" class="allocation-bar"></div>
+            <div id="allocationLegend" class="allocation-legend"></div>
+          </section>
+
+          <div class="portfolio-grid">
+            <article class="panel">
+              <div class="panel-title-row">
+                <h3>Holdings</h3>
+              </div>
+              <div id="portfolioHoldings" class="table-shell"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-title-row">
+                <h3>Profit / Loss</h3>
+              </div>
+              <div id="profitLossCards" class="comparison-grid"></div>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="panel-title-row">
+              <h3>Recent Trades History</h3>
+            </div>
+            <div id="tradeHistory" class="table-shell"></div>
+          </article>
+        </section>
+
+        <section id="newsView" class="view">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="muted">Recent spikes, losses, volume, and market-cap notes</p>
+            </div>
+          </div>
+          <div id="newsList" class="news-list"></div>
+        </section>
+
+        <section id="upcomingView" class="view">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="muted">Exchange calendar, earnings, dividends, and IPO windows</p>
+            </div>
+          </div>
+          <div id="upcomingList" class="timeline"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
