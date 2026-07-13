@@ -481,6 +481,59 @@ body[data-theme="light"] .nav-item.active .nav-icon {
 
 .active-view {
   display: block;
+  animation: view-enter 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.active-view > * {
+  animation: section-enter 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.active-view #marketDetailContent > * {
+  animation: section-enter 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.active-view > *:nth-child(2) {
+  animation-delay: 55ms;
+}
+
+.active-view > *:nth-child(3) {
+  animation-delay: 105ms;
+}
+
+.active-view > *:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-view,
+  .active-view > *,
+  .active-view #marketDetailContent > * {
+    animation: none;
+  }
 }
 
 .section-heading {
