@@ -1,5 +1,6 @@
 :root {
   color-scheme: dark;
+  --ui-scale: 0.82;
   --bg: #0d0f12;
   --surface: #15181c;
   --surface-2: #1d2025;
@@ -52,6 +53,7 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 260px),
     var(--bg);
@@ -79,12 +81,14 @@ button {
 
 .auth-screen {
   display: grid;
-  min-height: 100vh;
+  width: calc(100% / var(--ui-scale));
+  min-height: calc(100vh / var(--ui-scale));
   place-items: center;
   padding: 24px;
   background:
     linear-gradient(90deg, rgba(47, 209, 121, 0.06), transparent 40%),
     linear-gradient(180deg, #0d0f12, #101317);
+  zoom: var(--ui-scale);
 }
 
 .auth-panel {
@@ -158,8 +162,10 @@ input:focus {
 
 .app-shell {
   display: grid;
-  min-height: 100vh;
+  width: calc(100% / var(--ui-scale));
+  min-height: calc(100vh / var(--ui-scale));
   grid-template-columns: 220px minmax(0, 1fr);
+  zoom: var(--ui-scale);
 }
 
 .sidebar {
@@ -167,13 +173,21 @@ input:focus {
   top: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh / var(--ui-scale));
   padding: 18px 14px 16px;
   border-right: 1px solid var(--line-soft);
   background:
     linear-gradient(180deg, rgba(111, 177, 255, 0.08), transparent 32%),
     linear-gradient(0deg, rgba(47, 209, 121, 0.06), transparent 42%),
     #101216;
+}
+
+@supports not (zoom: 1) {
+  .auth-screen,
+  .app-shell {
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+  }
 }
 
 body[data-theme="light"] .sidebar {
