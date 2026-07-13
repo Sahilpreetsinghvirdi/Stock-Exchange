@@ -249,30 +249,34 @@ body[data-theme="light"] .sidebar-account {
 }
 
 .theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  position: relative;
+  display: block;
   width: 100%;
-  min-height: 30px;
+  min-height: 32px;
   margin-bottom: 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--text);
-  padding: 4px 10px 4px 4px;
+  padding: 4px;
+  overflow: hidden;
   font-size: 12px;
   font-weight: 800;
+  text-align: right;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
 .theme-toggle-mark {
-  position: relative;
+  position: absolute;
+  top: 4px;
+  left: 4px;
   display: block;
   width: 22px;
   height: 22px;
   border-radius: 999px;
   background: #111418;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: left 220ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .theme-toggle-mark::after {
@@ -281,9 +285,20 @@ body[data-theme="light"] .sidebar-account {
   inset: 7px;
   border-radius: inherit;
   background: #f0f2f4;
+  transition: inset 180ms ease, background 180ms ease;
+}
+
+#themeToggleLabel {
+  display: block;
+  min-height: 22px;
+  line-height: 22px;
+  padding: 0 8px 0 34px;
+  text-align: right;
+  transition: padding 220ms ease, text-align 220ms ease, transform 220ms ease;
 }
 
 body[data-theme="light"] .theme-toggle-mark {
+  left: calc(100% - 26px);
   background: #f6f0cc;
   box-shadow: inset 0 0 0 1px rgba(130, 104, 30, 0.12);
 }
@@ -291,6 +306,11 @@ body[data-theme="light"] .theme-toggle-mark {
 body[data-theme="light"] .theme-toggle-mark::after {
   inset: 5px;
   background: #151515;
+}
+
+body[data-theme="light"] #themeToggleLabel {
+  padding: 0 34px 0 8px;
+  text-align: left;
 }
 
 .sidebar-card span,
