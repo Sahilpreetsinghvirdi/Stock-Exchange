@@ -209,6 +209,7 @@ function bindElements() {
     portfolio: document.querySelector("#portfolioView"),
     news: document.querySelector("#newsView"),
     upcoming: document.querySelector("#upcomingView"),
+    developer: document.querySelector("#developerView"),
   };
   els.pageTitle = document.querySelector("#pageTitle");
   els.sessionLine = document.querySelector("#sessionLine");
@@ -408,6 +409,7 @@ function showView(view, symbol) {
     portfolio: "Portfolio",
     news: "News",
     upcoming: "Upcoming",
+    developer: "Developer",
   };
   els.pageTitle.textContent = titles[view] || "Overview";
 

@@ -1433,6 +1433,115 @@ body[data-theme="light"] .comparison-item {
   margin: 0 0 6px;
 }
 
+.developer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, rgba(47, 209, 121, 0.1), transparent 45%),
+    var(--surface);
+  padding: 20px;
+}
+
+.developer-cta h3 {
+  margin: 0 0 6px;
+  font-size: 21px;
+}
+
+.developer-profile {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(111, 177, 255, 0.12), transparent 34%),
+    linear-gradient(315deg, rgba(47, 209, 121, 0.1), transparent 42%),
+    var(--surface);
+  padding: 28px;
+}
+
+.developer-photo-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.developer-photo {
+  width: min(220px, 100%);
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-2);
+  object-fit: cover;
+  box-shadow: var(--shadow);
+}
+
+.developer-copy h2 {
+  margin: 0 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 0.95;
+}
+
+.developer-lede {
+  max-width: 760px;
+  margin: 0 0 18px;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.developer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.developer-tags span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+body[data-theme="light"] .developer-tags span {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.developer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.link-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.developer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.developer-grid h3 {
+  margin: 0 0 10px;
+}
+
 .toast {
   position: fixed;
   right: 24px;
@@ -1485,7 +1594,8 @@ body[data-theme="light"] .comparison-item {
   .dashboard-grid,
   .market-detail-hero,
   .portfolio-grid,
-  .company-section {
+  .company-section,
+  .developer-profile {
     grid-template-columns: 1fr;
   }
 }
@@ -1497,6 +1607,7 @@ body[data-theme="light"] .comparison-item {
 
   .topbar,
   .split-heading,
+  .developer-cta,
   .market-summary-panel,
   .detail-heading {
     align-items: stretch;
@@ -1515,6 +1626,7 @@ body[data-theme="light"] .comparison-item {
   .holdings-grid,
   .metrics-grid,
   .news-list,
+  .developer-grid,
   .info-list,
   .control-grid,
   .control-actions {

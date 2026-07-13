@@ -14,6 +14,7 @@ A clean, browser-based paper trading dashboard for a fictional stock exchange. T
 - Quick Trade panel with buy/sell controls, buying power, max shares, estimated value, and owned shares
 - Portfolio page with total value, cash, invested value, holdings allocation, trade history, and profit/loss comparison
 - News and upcoming market event sections
+- Developer profile page opened from the Upcoming section, with GitHub avatar and project intro
 - Dark and light mode
 - PDF report download from the dashboard
 
