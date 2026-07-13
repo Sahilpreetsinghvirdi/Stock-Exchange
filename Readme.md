@@ -7,6 +7,7 @@ A clean, browser-based paper trading dashboard for a fictional stock exchange. T
 - Gmail-style local sign-in with saved browser credentials
 - Dashboard with portfolio value, cash, live market cards, market watch, and holdings
 - Markets page with expandable stock detail views
+- Custom local market creation with owner controls for price, tick limit, pause/resume, and removal
 - Interactive stock charts with hover values and range selectors: `1D`, `1W`, `1M`, `3M`, `YTD`, `1Y`
 - Live market ticks every 5 seconds while the exchange is open
 - Market closed window from `2:00 AM` to `4:00 AM IST`

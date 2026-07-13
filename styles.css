@@ -65,7 +65,8 @@ body[data-theme="light"] {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -133,7 +134,8 @@ body[data-theme="light"] .auth-panel {
   font-size: 14px;
 }
 
-input {
+input,
+textarea {
   width: 100%;
   min-height: 46px;
   border: 1px solid var(--line);
@@ -144,7 +146,14 @@ input {
   padding: 0 14px;
 }
 
-input:focus {
+textarea {
+  min-height: 90px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
   border-color: rgba(47, 209, 121, 0.7);
   box-shadow: 0 0 0 3px rgba(47, 209, 121, 0.12);
 }
@@ -898,6 +907,40 @@ body[data-theme="light"] .empty-state {
   background: rgba(255, 255, 255, 0.7);
 }
 
+.market-builder-panel {
+  margin-bottom: 18px;
+}
+
+.market-builder-panel .panel-title-row {
+  align-items: flex-start;
+}
+
+.market-create-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.market-create-form label,
+.control-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.full-field {
+  grid-column: 1 / -1;
+}
+
+.market-create-actions {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
 .markets-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -931,6 +974,12 @@ body[data-theme="light"] .empty-state {
   color: var(--muted);
   padding: 5px 9px;
   font-size: 12px;
+}
+
+.market-meta .paused-meta {
+  border-color: transparent;
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .sparkline {
@@ -1135,6 +1184,39 @@ body[data-theme="light"] .allocation-bar {
   border-color: rgba(255, 107, 107, 0.75);
   background: var(--red);
   color: #1b0808;
+}
+
+.owner-controls {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.compact-row {
+  margin-bottom: 0;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.control-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.danger-button {
+  color: var(--red);
+}
+
+.danger-button:hover {
+  border-color: rgba(255, 107, 107, 0.45);
+  background: var(--red-soft);
 }
 
 .company-section {
@@ -1428,11 +1510,18 @@ body[data-theme="light"] .comparison-item {
   }
 
   .stock-strip,
+  .market-create-form,
   .markets-grid,
   .holdings-grid,
   .metrics-grid,
   .news-list,
-  .info-list {
+  .info-list,
+  .control-grid,
+  .control-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .market-create-actions {
     grid-template-columns: 1fr;
   }
 

@@ -18,6 +18,7 @@ const RANGE_WINDOWS = {
   "3M": 90 * DAY_MS,
   "1Y": 365 * DAY_MS,
 };
+const CUSTOM_MARKET_COLORS = ["#2fd179", "#6fb1ff", "#d8a948", "#9bd36a", "#ffb86b", "#b794f4", "#ff7f7f"];
 
 const MARKET_DEFINITIONS = [
   {
@@ -226,6 +227,15 @@ function bindElements() {
   els.dashboardCashLine = document.querySelector("#dashboardCashLine");
   els.wealthChart = document.querySelector("#wealthChart");
   els.marketsGrid = document.querySelector("#marketsGrid");
+  els.marketCreateForm = document.querySelector("#marketCreateForm");
+  els.marketSymbolInput = document.querySelector("#marketSymbolInput");
+  els.marketNameInput = document.querySelector("#marketNameInput");
+  els.marketIndustryInput = document.querySelector("#marketIndustryInput");
+  els.marketHqInput = document.querySelector("#marketHqInput");
+  els.marketPriceInput = document.querySelector("#marketPriceInput");
+  els.marketTickLimitInput = document.querySelector("#marketTickLimitInput");
+  els.marketAboutInput = document.querySelector("#marketAboutInput");
+  els.marketCreateMessage = document.querySelector("#marketCreateMessage");
   els.marketBackButton = document.querySelector("#marketBackButton");
   els.marketDetailContent = document.querySelector("#marketDetailContent");
   els.portfolioSubtext = document.querySelector("#portfolioSubtext");
@@ -255,6 +265,10 @@ function bindEvents() {
   els.viewTargets.forEach((target) => {
     target.addEventListener("click", () => showView(target.dataset.viewTarget));
   });
+  els.marketSymbolInput?.addEventListener("input", () => {
+    els.marketSymbolInput.value = normalizeMarketSymbol(els.marketSymbolInput.value);
+  });
+  els.marketCreateForm?.addEventListener("submit", handleCreateMarket);
   els.marketBackButton?.addEventListener("click", () => showView("markets"));
   els.downloadReportButton.addEventListener("click", downloadReport);
   els.signOutButton.addEventListener("click", signOut);
@@ -509,6 +523,91 @@ function renderMarkets() {
   requestAnimationFrame(drawSparklines);
 }
 
+function handleCreateMarket(event) {
+  event.preventDefault();
+  if (!state.user) return;
+
+  const symbol = normalizeMarketSymbol(els.marketSymbolInput.value);
+  const name = els.marketNameInput.value.trim();
+  const industry = els.marketIndustryInput.value.trim();
+  const headquarters = els.marketHqInput.value.trim();
+  const price = roundMoney(Number(els.marketPriceInput.value));
+  const tickLimit = Math.min(5, Math.max(0.1, Number(els.marketTickLimitInput.value) || 1));
+  const about = els.marketAboutInput.value.trim();
+
+  els.marketCreateMessage.textContent = "";
+
+  if (symbol.length < 2) {
+    els.marketCreateMessage.textContent = "Use a 2-5 character symbol.";
+    return;
+  }
+  if (findMarket(symbol)) {
+    els.marketCreateMessage.textContent = `$${symbol} already exists.`;
+    return;
+  }
+  if (!name || !industry || !headquarters) {
+    els.marketCreateMessage.textContent = "Fill in the company details.";
+    return;
+  }
+  if (!Number.isFinite(price) || price < 0.25) {
+    els.marketCreateMessage.textContent = "Start price must be at least $0.25.";
+    return;
+  }
+
+  const market = createCustomMarket({
+    symbol,
+    name,
+    industry,
+    headquarters,
+    price,
+    tickLimit,
+    about,
+  });
+
+  state.markets.push(market);
+  saveMarkets();
+  els.marketCreateForm.reset();
+  els.marketTickLimitInput.value = "1.00";
+  renderAll();
+  openMarket(symbol);
+  toast(`Started $${symbol} market.`);
+}
+
+function createCustomMarket({ symbol, name, industry, headquarters, price, tickLimit, about }) {
+  const volume = Math.round(75000 + Math.random() * 250000);
+  return {
+    symbol,
+    name,
+    industry,
+    headquarters,
+    price,
+    open: price,
+    volume,
+    marketCap: roundMoney(price * 1000000),
+    tickLimit,
+    color: getCustomMarketColor(symbol),
+    about: about || `${name} is a custom local market created for paper-trading simulation.`,
+    custom: true,
+    ownerEmail: state.user.email,
+    isPaused: false,
+    history: seedHistory(price, tickLimit),
+  };
+}
+
+function normalizeMarketSymbol(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 5);
+}
+
+function getCustomMarketColor(symbol) {
+  const score = String(symbol)
+    .split("")
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return CUSTOM_MARKET_COLORS[score % CUSTOM_MARKET_COLORS.length];
+}
+
 function marketCardTemplate(market) {
   const change = getMarketChange(market);
   const changeClass = change < 0 ? "negative" : "";
@@ -524,6 +623,8 @@ function marketCardTemplate(market) {
       <span class="market-meta">
         <span>${escapeHtml(market.industry)}</span>
         <span>${escapeHtml(market.headquarters)}</span>
+        ${market.custom ? `<span>Custom</span>` : ""}
+        ${market.isPaused ? `<span class="paused-meta">Paused</span>` : ""}
       </span>
       <span class="sparkline">
         <canvas data-sparkline="${market.symbol}" width="360" height="90"></canvas>
@@ -566,6 +667,7 @@ function renderMarketDetail() {
   const draft = getTradeDraft(market.symbol);
   const focusedTradeInput = document.activeElement?.id;
   const session = getMarketSessionStatus();
+  const detailStatus = getMarketDetailStatus(market, session);
   const band = getFluctuationBand(market);
 
   els.marketDetailContent.innerHTML = `
@@ -573,7 +675,7 @@ function renderMarketDetail() {
       <div>
         <div class="market-title-row">
           <h2>$${market.symbol}</h2>
-          <span id="detailMarketStatus" class="status-pill compact ${session.isOpen ? "" : "closed"}">${session.label} - ${session.detail}</span>
+          <span id="detailMarketStatus" class="status-pill compact ${detailStatus.className}">${detailStatus.label} - ${detailStatus.detail}</span>
         </div>
         <p class="muted">${escapeHtml(market.industry)} - ${escapeHtml(market.headquarters)}</p>
         <div class="market-company-lines">
@@ -603,7 +705,7 @@ function renderMarketDetail() {
           <h3>Quick Trade</h3>
         </div>
         <div class="trade-form">
-          <div id="tradeSessionBanner" class="session-banner ${session.isOpen ? "" : "closed"}">${session.isOpen ? `Market open. ${session.detail}.` : `Market closed. ${session.detail}.`}</div>
+          <div id="tradeSessionBanner" class="session-banner ${isMarketTradable(market) ? "" : "closed"}">${getTradeSessionText(market, session)}</div>
           <label>
             Shares
             <input id="tradeQuantity" type="number" min="1" step="1" placeholder="0" inputmode="numeric" value="${escapeHtml(draft.quantity)}" />
@@ -626,6 +728,7 @@ function renderMarketDetail() {
           </div>
           <p id="tradeMessage" class="form-message"></p>
         </div>
+        ${ownerMarketControlsTemplate(market)}
       </aside>
     </div>
 
@@ -652,6 +755,7 @@ function renderMarketDetail() {
 
   bindRangeButtons();
   bindTradePanel(market);
+  bindOwnerMarketControls(market);
   if (focusedTradeInput === "tradeQuantity" || focusedTradeInput === "tickLimitInput") {
     const input = document.querySelector(`#${focusedTradeInput}`);
     input?.focus({ preventScroll: true });
@@ -668,6 +772,7 @@ function updateMarketDetailLive() {
   }
 
   const session = getMarketSessionStatus();
+  const detailStatus = getMarketDetailStatus(market, session);
   const change = getMarketChange(market);
   const priceNode = document.querySelector("#detailMarketPrice");
   const changeNode = document.querySelector("#detailMarketChange");
@@ -679,8 +784,8 @@ function updateMarketDetailLive() {
     changeNode.className = change < 0 ? "negative" : "positive";
   }
   if (statusNode) {
-    statusNode.textContent = `${session.label} - ${session.detail}`;
-    statusNode.className = `status-pill compact ${session.isOpen ? "" : "closed"}`;
+    statusNode.textContent = `${detailStatus.label} - ${detailStatus.detail}`;
+    statusNode.className = `status-pill compact ${detailStatus.className}`;
   }
 
   updateTradeControls(market);
@@ -715,8 +820,10 @@ function bindTradePanel(market) {
   });
 
   buyButton.addEventListener("click", () => {
-    if (!getMarketSessionStatus().isOpen) {
-      tradeMessage.textContent = "Market is closed. Trading opens at 4:00 AM IST.";
+    if (!isMarketTradable(market)) {
+      tradeMessage.textContent = market.isPaused
+        ? "Market is paused by the owner."
+        : "Market is closed. Trading opens at 4:00 AM IST.";
       updateTradeState();
       return;
     }
@@ -734,8 +841,10 @@ function bindTradePanel(market) {
   });
 
   sellButton.addEventListener("click", () => {
-    if (!getMarketSessionStatus().isOpen) {
-      tradeMessage.textContent = "Market is closed. Trading opens at 4:00 AM IST.";
+    if (!isMarketTradable(market)) {
+      tradeMessage.textContent = market.isPaused
+        ? "Market is paused by the owner."
+        : "Market is closed. Trading opens at 4:00 AM IST.";
       updateTradeState();
       return;
     }
@@ -775,6 +884,7 @@ function updateTradeControls(market, options = {}) {
   const holding = state.user.holdings[market.symbol];
   const owned = holding ? holding.shares : 0;
   const session = getMarketSessionStatus();
+  const tradable = isMarketTradable(market);
   const portfolio = calculatePortfolio();
   const maxBuyShares = Math.floor(state.user.cash / market.price);
 
@@ -785,13 +895,142 @@ function updateTradeControls(market, options = {}) {
   if (buyingCapacity) buyingCapacity.textContent = formatCurrency(state.user.cash);
   if (maxBuySharesLine) maxBuySharesLine.textContent = `${formatShares(maxBuyShares)} shares`;
   if (sessionBanner) {
-    sessionBanner.textContent = session.isOpen ? `Market open. ${session.detail}.` : `Market closed. ${session.detail}.`;
-    sessionBanner.className = `session-banner ${session.isOpen ? "" : "closed"}`;
+    sessionBanner.textContent = getTradeSessionText(market, session);
+    sessionBanner.className = `session-banner ${tradable ? "" : "closed"}`;
   }
   if (options.clearMessage && tradeMessage) tradeMessage.textContent = "";
 
-  buyButton.disabled = !session.isOpen || qty <= 0 || value > state.user.cash;
-  sellButton.disabled = !session.isOpen || qty <= 0 || qty > owned;
+  buyButton.disabled = !tradable || qty <= 0 || value > state.user.cash;
+  sellButton.disabled = !tradable || qty <= 0 || qty > owned;
+}
+
+function ownerMarketControlsTemplate(market) {
+  if (!market.custom) return "";
+
+  if (!isMarketOwner(market)) {
+    return `
+      <div class="owner-controls">
+        <div class="panel-title-row compact-row">
+          <h3>Market Controls</h3>
+          <span class="status-pill compact">Custom</span>
+        </div>
+        <p class="muted">This custom market can only be controlled from the account that created it.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="owner-controls">
+      <div class="panel-title-row compact-row">
+        <h3>Market Controls</h3>
+        <span class="status-pill compact ${market.isPaused ? "closed" : ""}">${market.isPaused ? "Paused" : "Running"}</span>
+      </div>
+      <div class="control-grid">
+        <label>
+          Set price
+          <input id="ownerPriceInput" type="number" min="0.25" step="0.01" value="${market.price.toFixed(2)}" />
+        </label>
+        <label>
+          Tick limit (%)
+          <input id="ownerTickLimitControl" type="number" min="0.1" max="5" step="0.05" value="${market.tickLimit.toFixed(2)}" />
+        </label>
+      </div>
+      <div class="control-actions">
+        <button id="ownerApplyButton" class="secondary-button" type="button">Apply</button>
+        <button id="ownerPauseButton" class="ghost-button" type="button">${market.isPaused ? "Resume" : "Pause"}</button>
+        <button id="ownerRemoveButton" class="ghost-button danger-button" type="button">Remove</button>
+      </div>
+      <p id="ownerControlMessage" class="form-message"></p>
+    </div>
+  `;
+}
+
+function bindOwnerMarketControls(market) {
+  if (!isMarketOwner(market)) return;
+
+  const priceInput = document.querySelector("#ownerPriceInput");
+  const tickLimitInput = document.querySelector("#ownerTickLimitControl");
+  const applyButton = document.querySelector("#ownerApplyButton");
+  const pauseButton = document.querySelector("#ownerPauseButton");
+  const removeButton = document.querySelector("#ownerRemoveButton");
+  const message = document.querySelector("#ownerControlMessage");
+
+  applyButton?.addEventListener("click", () => {
+    const price = roundMoney(Number(priceInput.value));
+    const tickLimit = Math.min(5, Math.max(0.1, Number(tickLimitInput.value) || market.tickLimit));
+
+    if (!Number.isFinite(price) || price < 0.25) {
+      message.textContent = "Price must be at least $0.25.";
+      return;
+    }
+
+    market.price = price;
+    market.tickLimit = tickLimit;
+    market.marketCap = roundMoney(price * 1000000);
+    market.history.push({ t: Date.now(), v: price });
+    market.history = market.history.slice(-MAX_MARKET_POINTS);
+    saveMarkets();
+    renderAll();
+    showView("marketDetail");
+    toast(`Updated $${market.symbol} controls.`);
+  });
+
+  pauseButton?.addEventListener("click", () => {
+    market.isPaused = !market.isPaused;
+    saveMarkets();
+    renderAll();
+    showView("marketDetail");
+    toast(`${market.isPaused ? "Paused" : "Resumed"} $${market.symbol}.`);
+  });
+
+  removeButton?.addEventListener("click", () => {
+    if (hasAnyHoldingsForSymbol(market.symbol)) {
+      message.textContent = "Sell all shares before removing this market.";
+      return;
+    }
+    if (!window.confirm(`Remove $${market.symbol} from this exchange?`)) return;
+
+    state.markets = state.markets.filter((item) => item.symbol !== market.symbol);
+    state.selectedSymbol = null;
+    saveMarkets();
+    renderAll();
+    showView("markets");
+    toast(`Removed $${market.symbol}.`);
+  });
+}
+
+function isMarketOwner(market) {
+  return Boolean(market.custom && state.user && market.ownerEmail === state.user.email);
+}
+
+function hasAnyHoldingsForSymbol(symbol) {
+  return Object.values(state.users).some((user) => numberOr(user?.holdings?.[symbol]?.shares, 0) > 0);
+}
+
+function isMarketTradable(market) {
+  return getMarketSessionStatus().isOpen && !market.isPaused;
+}
+
+function getMarketDetailStatus(market, session = getMarketSessionStatus()) {
+  if (market.isPaused) {
+    return {
+      label: "PAUSED",
+      detail: "owner controls stopped ticks",
+      className: "closed",
+    };
+  }
+  return {
+    label: session.label,
+    detail: session.detail,
+    className: session.isOpen ? "" : "closed",
+  };
+}
+
+function getTradeSessionText(market, session = getMarketSessionStatus()) {
+  if (market.isPaused) {
+    return "Market paused by owner. Ticks and trading are stopped.";
+  }
+  return session.isOpen ? `Market open. ${session.detail}.` : `Market closed. ${session.detail}.`;
 }
 
 function rangeButtonTemplate() {
@@ -1198,6 +1437,7 @@ function advanceMarkets() {
 
   const now = Date.now();
   state.markets.forEach((market) => {
+    if (market.isPaused) return;
     const pct = (Math.random() * 2 - 1) * (market.tickLimit / 100);
     const next = Math.max(0.25, market.price * (1 + pct));
     market.price = roundMoney(next);
@@ -1274,29 +1514,55 @@ function totalShares() {
 
 function hydrateMarkets() {
   const saved = readJson(MARKET_STORAGE_KEY, null);
-  const bySymbol = new Map(Array.isArray(saved) ? saved.map((market) => [market.symbol, market]) : []);
+  const savedMarkets = Array.isArray(saved) ? saved : [];
+  const definitionSymbols = new Set(MARKET_DEFINITIONS.map((market) => market.symbol));
+  const bySymbol = new Map(savedMarkets.map((market) => [market.symbol, market]));
 
   const markets = MARKET_DEFINITIONS.map((definition) => {
-    const savedMarket = bySymbol.get(definition.symbol) || {};
-    const price = numberOr(savedMarket.price, definition.price);
-    const tickLimit = numberOr(savedMarket.tickLimit, definition.tickLimit);
-    const savedHistory = normalizeMarketHistory(savedMarket.history, price);
-    const market = {
-      ...definition,
-      ...savedMarket,
-      price,
-      open: numberOr(savedMarket.open, definition.open),
-      volume: numberOr(savedMarket.volume, definition.volume),
-      tickLimit,
-      history: hasWideMarketHistory(savedHistory)
-        ? savedHistory.slice(-MAX_MARKET_POINTS)
-        : seedHistory(price, tickLimit),
-    };
-    return market;
+    return hydrateMarketRecord(definition, bySymbol.get(definition.symbol) || {});
   });
+
+  savedMarkets
+    .filter((market) => market.custom && !definitionSymbols.has(market.symbol))
+    .forEach((market) => {
+      const hydrated = hydrateMarketRecord(market, market);
+      if (hydrated.symbol && !markets.some((item) => item.symbol === hydrated.symbol)) {
+        markets.push(hydrated);
+      }
+    });
 
   localStorage.setItem(MARKET_STORAGE_KEY, JSON.stringify(markets));
   return markets;
+}
+
+function hydrateMarketRecord(baseMarket, savedMarket = {}) {
+  const symbol = normalizeMarketSymbol(savedMarket.symbol || baseMarket.symbol);
+  const price = roundMoney(numberOr(savedMarket.price, baseMarket.price || 10));
+  const tickLimit = Math.min(5, Math.max(0.1, numberOr(savedMarket.tickLimit, baseMarket.tickLimit || 1)));
+  const savedHistory = normalizeMarketHistory(savedMarket.history, price);
+  const custom = Boolean(savedMarket.custom || baseMarket.custom);
+
+  return {
+    ...baseMarket,
+    ...savedMarket,
+    symbol,
+    name: String(savedMarket.name || baseMarket.name || `${symbol} Market`),
+    industry: String(savedMarket.industry || baseMarket.industry || "Custom market"),
+    headquarters: String(savedMarket.headquarters || baseMarket.headquarters || "Local desk"),
+    price,
+    open: roundMoney(numberOr(savedMarket.open, baseMarket.open || price)),
+    volume: Math.max(1000, Math.round(numberOr(savedMarket.volume, baseMarket.volume || 100000))),
+    marketCap: roundMoney(numberOr(savedMarket.marketCap, baseMarket.marketCap || price * 1000000)),
+    tickLimit,
+    color: savedMarket.color || baseMarket.color || getCustomMarketColor(symbol),
+    about: String(savedMarket.about || baseMarket.about || `${symbol} is a custom local market.`),
+    custom,
+    ownerEmail: savedMarket.ownerEmail || baseMarket.ownerEmail || "",
+    isPaused: custom ? Boolean(savedMarket.isPaused) : false,
+    history: hasWideMarketHistory(savedHistory)
+      ? savedHistory.slice(-MAX_MARKET_POINTS)
+      : seedHistory(price, tickLimit),
+  };
 }
 
 function seedHistory(targetPrice, tickLimit) {
