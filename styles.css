@@ -174,8 +174,9 @@ textarea:focus {
 .sidebar {
   position: sticky;
   top: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
   height: 100vh;
   padding: 18px 14px 16px;
   border-right: 1px solid var(--line-soft);
@@ -183,6 +184,10 @@ textarea:focus {
     linear-gradient(180deg, rgba(111, 177, 255, 0.08), transparent 32%),
     linear-gradient(0deg, rgba(47, 209, 121, 0.06), transparent 42%),
     #101216;
+}
+
+.sidebar .eyebrow {
+  margin: 0;
 }
 
 body[data-theme="light"] .sidebar {
@@ -194,22 +199,25 @@ body[data-theme="light"] .sidebar {
 
 .sidebar-top,
 .sidebar-bottom {
-  flex: 0 0 auto;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
 }
 
 .sidebar-middle {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  min-height: 280px;
-  padding: 26px 0;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 0;
+  scrollbar-width: thin;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 4px 16px;
+  padding: 0 4px;
 }
 
 .brand-mark,
@@ -249,7 +257,7 @@ body[data-theme="light"] .symbol-tile {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(29, 32, 37, 0.76);
-  padding: 12px;
+  padding: 10px 12px;
 }
 
 body[data-theme="light"] .sidebar-card,
@@ -262,7 +270,7 @@ body[data-theme="light"] .sidebar-account {
   display: block;
   width: 100%;
   min-height: 32px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
@@ -333,7 +341,7 @@ body[data-theme="light"] #themeToggleLabel {
 .sidebar-card strong,
 .sidebar-account strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   color: var(--text);
   font-size: 16px;
 }
@@ -362,8 +370,9 @@ body[data-theme="light"] #themeToggleLabel {
 
 .nav-list {
   display: grid;
+  align-content: start;
   width: 100%;
-  gap: 6px;
+  gap: 8px;
 }
 
 .nav-item {
@@ -375,7 +384,8 @@ body[data-theme="light"] #themeToggleLabel {
   border-radius: 6px;
   background: rgba(13, 15, 18, 0.24);
   color: var(--muted);
-  padding: 11px 12px;
+  min-height: 46px;
+  padding: 9px 12px;
   text-align: left;
 }
 
@@ -1008,6 +1018,149 @@ body[data-theme="light"] .sparkline {
   margin-bottom: 22px;
 }
 
+.trade-terminal {
+  display: grid;
+  gap: 18px;
+}
+
+.trade-terminal-head {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px;
+}
+
+.trade-selector {
+  position: relative;
+  width: min(360px, 100%);
+}
+
+.market-select-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.market-select-button strong,
+.trade-market-option strong {
+  display: block;
+}
+
+.market-select-button small,
+.trade-market-option small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.select-caret {
+  color: var(--muted);
+  font-weight: 900;
+  transition: transform 180ms ease;
+}
+
+.market-select-button[aria-expanded="true"] .select-caret {
+  transform: rotate(180deg);
+}
+
+.market-select-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 12;
+  width: min(420px, calc(100vw - 40px));
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 6px;
+}
+
+.market-select-options {
+  display: grid;
+  gap: 5px;
+}
+
+.trade-market-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  padding: 10px;
+  text-align: left;
+}
+
+.trade-market-option:hover,
+.trade-market-option.active {
+  border-color: rgba(111, 177, 255, 0.28);
+  background: var(--surface-2);
+}
+
+.trade-market-option > span:last-child {
+  text-align: right;
+}
+
+.trade-quote {
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  min-width: 190px;
+}
+
+.trade-quote strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 3.5vw, 44px);
+  line-height: 1;
+}
+
+.trade-quote span {
+  margin-top: 6px;
+  font-weight: 900;
+}
+
+.trade-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.trade-chart-panel {
+  min-width: 0;
+}
+
+.trade-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.market-meta .live-meta {
+  border-color: transparent;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 .market-summary-panel {
   display: flex;
   align-items: flex-start;
@@ -1469,16 +1622,42 @@ body[data-theme="light"] .comparison-item {
 .developer-photo-wrap {
   display: grid;
   place-items: center;
+  position: relative;
+  width: min(220px, 100%);
+  aspect-ratio: 1;
 }
 
-.developer-photo {
-  width: min(220px, 100%);
+.developer-photo,
+.developer-avatar-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   aspect-ratio: 1;
   border: 1px solid var(--line);
   border-radius: 50%;
+  box-shadow: var(--shadow);
+}
+
+.developer-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(47, 209, 121, 0.3), rgba(111, 177, 255, 0.3)),
+    var(--surface-2);
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 58px;
+  font-weight: 800;
+}
+
+.developer-photo {
   background: var(--surface-2);
   object-fit: cover;
-  box-shadow: var(--shadow);
+}
+
+.developer-photo.is-hidden {
+  display: none;
 }
 
 .developer-copy h2 {
@@ -1572,6 +1751,7 @@ body[data-theme="light"] .developer-tags span {
 
   .sidebar {
     position: static;
+    grid-template-rows: auto auto auto;
     height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--line-soft);
@@ -1583,16 +1763,18 @@ body[data-theme="light"] .developer-tags span {
   }
 
   .nav-list {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .nav-item {
     justify-content: center;
     text-align: center;
+    min-height: 42px;
   }
 
   .dashboard-grid,
   .market-detail-hero,
+  .trade-chart-grid,
   .portfolio-grid,
   .company-section,
   .developer-profile {
@@ -1607,6 +1789,7 @@ body[data-theme="light"] .developer-tags span {
 
   .topbar,
   .split-heading,
+  .trade-terminal-head,
   .developer-cta,
   .market-summary-panel,
   .detail-heading {
@@ -1627,6 +1810,7 @@ body[data-theme="light"] .developer-tags span {
   .metrics-grid,
   .news-list,
   .developer-grid,
+  .trade-stats-grid,
   .info-list,
   .control-grid,
   .control-actions {
@@ -1649,6 +1833,7 @@ body[data-theme="light"] .developer-tags span {
   .nav-list {
     display: flex;
     overflow-x: auto;
+    padding-bottom: 2px;
   }
 
   .nav-item {

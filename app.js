@@ -8,6 +8,7 @@ const ACCOUNT_BALANCE_VERSION = 3;
 const MAX_POINTS = 90;
 const MAX_MARKET_POINTS = 650;
 const TICK_MS = 5000;
+const LIVE_REFRESH_MS = 30000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CLOSED_START_MINUTES = 2 * 60;
 const CLOSED_END_MINUTES = 4 * 60;
@@ -21,6 +22,160 @@ const RANGE_WINDOWS = {
 const CUSTOM_MARKET_COLORS = ["#2fd179", "#6fb1ff", "#d8a948", "#9bd36a", "#ffb86b", "#b794f4", "#ff7f7f"];
 
 const MARKET_DEFINITIONS = [
+  {
+    symbol: "BTC",
+    name: "Bitcoin",
+    industry: "Cryptocurrency",
+    headquarters: "Decentralized network",
+    price: 118000,
+    open: 117200,
+    volume: 42000000000,
+    marketCap: 2320000000000,
+    tickLimit: 0.85,
+    color: "#f7931a",
+    liveSource: { provider: "coingecko", id: "bitcoin" },
+    about: "Bitcoin is a decentralized digital asset traded globally across cryptocurrency exchanges.",
+  },
+  {
+    symbol: "ETH",
+    name: "Ethereum",
+    industry: "Cryptocurrency",
+    headquarters: "Decentralized network",
+    price: 4200,
+    open: 4140,
+    volume: 21000000000,
+    marketCap: 505000000000,
+    tickLimit: 0.95,
+    color: "#627eea",
+    liveSource: { provider: "coingecko", id: "ethereum" },
+    about: "Ethereum is a programmable blockchain network used for decentralized applications and digital assets.",
+  },
+  {
+    symbol: "MSFT",
+    name: "Microsoft",
+    industry: "Technology",
+    headquarters: "Redmond, United States",
+    price: 510,
+    open: 506,
+    volume: 21000000,
+    marketCap: 3790000000000,
+    tickLimit: 0.45,
+    color: "#6fb1ff",
+    liveSource: { provider: "stooq", symbol: "msft.us" },
+    about: "Microsoft develops cloud platforms, productivity software, gaming products, and enterprise technology services.",
+  },
+  {
+    symbol: "GOOGL",
+    name: "Alphabet",
+    industry: "Technology",
+    headquarters: "Mountain View, United States",
+    price: 185,
+    open: 183,
+    volume: 28000000,
+    marketCap: 2260000000000,
+    tickLimit: 0.5,
+    color: "#34a853",
+    liveSource: { provider: "stooq", symbol: "googl.us" },
+    about: "Alphabet is the parent company of Google, YouTube, Android, Cloud, and AI-focused businesses.",
+  },
+  {
+    symbol: "AAPL",
+    name: "Apple",
+    industry: "Consumer technology",
+    headquarters: "Cupertino, United States",
+    price: 230,
+    open: 228,
+    volume: 52000000,
+    marketCap: 3510000000000,
+    tickLimit: 0.5,
+    color: "#a3aab6",
+    liveSource: { provider: "stooq", symbol: "aapl.us" },
+    about: "Apple designs iPhone, Mac, iPad, wearables, services, and consumer software platforms.",
+  },
+  {
+    symbol: "NVDA",
+    name: "NVIDIA",
+    industry: "Semiconductors",
+    headquarters: "Santa Clara, United States",
+    price: 165,
+    open: 162,
+    volume: 180000000,
+    marketCap: 4050000000000,
+    tickLimit: 0.8,
+    color: "#76b900",
+    liveSource: { provider: "stooq", symbol: "nvda.us" },
+    about: "NVIDIA builds GPUs, AI accelerators, networking products, and software for accelerated computing.",
+  },
+  {
+    symbol: "TSLA",
+    name: "Tesla",
+    industry: "Electric vehicles",
+    headquarters: "Austin, United States",
+    price: 310,
+    open: 305,
+    volume: 95000000,
+    marketCap: 990000000000,
+    tickLimit: 0.9,
+    color: "#e82127",
+    liveSource: { provider: "stooq", symbol: "tsla.us" },
+    about: "Tesla produces electric vehicles, batteries, charging infrastructure, and energy storage systems.",
+  },
+  {
+    symbol: "AMZN",
+    name: "Amazon",
+    industry: "E-commerce and cloud",
+    headquarters: "Seattle, United States",
+    price: 225,
+    open: 222,
+    volume: 39000000,
+    marketCap: 2380000000000,
+    tickLimit: 0.55,
+    color: "#ff9900",
+    liveSource: { provider: "stooq", symbol: "amzn.us" },
+    about: "Amazon operates global e-commerce, AWS cloud infrastructure, logistics, devices, and digital media services.",
+  },
+  {
+    symbol: "META",
+    name: "Meta Platforms",
+    industry: "Social media and AI",
+    headquarters: "Menlo Park, United States",
+    price: 720,
+    open: 712,
+    volume: 16500000,
+    marketCap: 1810000000000,
+    tickLimit: 0.62,
+    color: "#1877f2",
+    liveSource: { provider: "stooq", symbol: "meta.us" },
+    about: "Meta operates Facebook, Instagram, WhatsApp, Reality Labs, advertising systems, and AI products.",
+  },
+  {
+    symbol: "NFLX",
+    name: "Netflix",
+    industry: "Streaming media",
+    headquarters: "Los Gatos, United States",
+    price: 1120,
+    open: 1105,
+    volume: 4200000,
+    marketCap: 480000000000,
+    tickLimit: 0.7,
+    color: "#e50914",
+    liveSource: { provider: "stooq", symbol: "nflx.us" },
+    about: "Netflix operates a global streaming entertainment platform with films, series, games, and original content.",
+  },
+  {
+    symbol: "SPCX",
+    name: "SpaceX",
+    industry: "Aerospace and satellite internet",
+    headquarters: "Hawthorne, United States",
+    price: 139,
+    open: 145,
+    volume: 18000000,
+    marketCap: 1833000000000,
+    tickLimit: 0.9,
+    color: "#f0f2f4",
+    liveSource: { provider: "stooq", symbol: "spcx.us" },
+    about: "SpaceX designs launch systems, spacecraft, satellite internet infrastructure, and space transport services.",
+  },
   {
     symbol: "COAL",
     name: "Coalie Industries",
@@ -147,11 +302,14 @@ const state = {
   selectedSymbol: null,
   currentView: "dashboard",
   tickTimer: null,
+  liveTimer: null,
   resizeTimer: null,
   hoverFrame: null,
   chartHover: new WeakMap(),
   tradeDrafts: {},
   chartRange: "1D",
+  tradeSelectedSymbol: "BTC",
+  liveStatus: "Waiting for live feed",
 };
 
 const els = {};
@@ -206,6 +364,7 @@ function bindElements() {
     dashboard: document.querySelector("#dashboardView"),
     markets: document.querySelector("#marketsView"),
     marketDetail: document.querySelector("#marketDetailView"),
+    trade: document.querySelector("#tradeView"),
     portfolio: document.querySelector("#portfolioView"),
     news: document.querySelector("#newsView"),
     upcoming: document.querySelector("#upcomingView"),
@@ -239,6 +398,22 @@ function bindElements() {
   els.marketCreateMessage = document.querySelector("#marketCreateMessage");
   els.marketBackButton = document.querySelector("#marketBackButton");
   els.marketDetailContent = document.querySelector("#marketDetailContent");
+  els.tradeLiveStatus = document.querySelector("#tradeLiveStatus");
+  els.tradeMarketSelectButton = document.querySelector("#tradeMarketSelectButton");
+  els.tradeMarketMenu = document.querySelector("#tradeMarketMenu");
+  els.tradeMarketOptions = document.querySelector("#tradeMarketOptions");
+  els.tradeSelectedSymbol = document.querySelector("#tradeSelectedSymbol");
+  els.tradeSelectedName = document.querySelector("#tradeSelectedName");
+  els.tradeQuotePrice = document.querySelector("#tradeQuotePrice");
+  els.tradeQuoteChange = document.querySelector("#tradeQuoteChange");
+  els.tradeSourceLabel = document.querySelector("#tradeSourceLabel");
+  els.tradeLineChart = document.querySelector("#tradeLineChart");
+  els.tradeCandleChart = document.querySelector("#tradeCandleChart");
+  els.tradeStatMarket = document.querySelector("#tradeStatMarket");
+  els.tradeStatType = document.querySelector("#tradeStatType");
+  els.tradeStatVolume = document.querySelector("#tradeStatVolume");
+  els.tradeStatUpdated = document.querySelector("#tradeStatUpdated");
+  els.developerPhoto = document.querySelector("#developerPhoto");
   els.portfolioSubtext = document.querySelector("#portfolioSubtext");
   els.portfolioTotalValue = document.querySelector("#portfolioTotalValue");
   els.portfolioTotalChange = document.querySelector("#portfolioTotalChange");
@@ -270,7 +445,19 @@ function bindEvents() {
     els.marketSymbolInput.value = normalizeMarketSymbol(els.marketSymbolInput.value);
   });
   els.marketCreateForm?.addEventListener("submit", handleCreateMarket);
+  els.developerPhoto?.addEventListener("error", () => {
+    els.developerPhoto.classList.add("is-hidden");
+  });
+  els.developerPhoto?.addEventListener("load", () => {
+    els.developerPhoto.classList.remove("is-hidden");
+  });
   els.marketBackButton?.addEventListener("click", () => showView("markets"));
+  els.tradeMarketSelectButton?.addEventListener("click", () => toggleTradeMarketMenu());
+  document.addEventListener("click", (event) => {
+    if (!els.tradeMarketSelectButton?.contains(event.target) && !els.tradeMarketMenu?.contains(event.target)) {
+      closeTradeMarketMenu();
+    }
+  });
   els.downloadReportButton.addEventListener("click", downloadReport);
   els.signOutButton.addEventListener("click", signOut);
   els.themeToggleButton.addEventListener("click", toggleTheme);
@@ -336,6 +523,7 @@ function startSession(email) {
   showApp();
   renderAll();
   startTicker();
+  startLiveFeed();
 }
 
 function normalizeUser(user) {
@@ -375,6 +563,7 @@ function showAuth() {
   els.authScreen.classList.remove("hidden");
   els.appShell.classList.add("hidden");
   stopTicker();
+  stopLiveFeed();
 }
 
 function showApp() {
@@ -406,6 +595,7 @@ function showView(view, symbol) {
     dashboard: "Overview",
     markets: "Markets",
     marketDetail: state.selectedSymbol ? `$${state.selectedSymbol}` : "Market",
+    trade: "Trade",
     portfolio: "Portfolio",
     news: "News",
     upcoming: "Upcoming",
@@ -431,6 +621,7 @@ function renderAll() {
   renderStatusPills();
   renderDashboard();
   renderMarkets();
+  renderTrade();
   renderPortfolio();
   renderNews();
   renderUpcoming();
@@ -523,6 +714,71 @@ function renderMarkets() {
     card.addEventListener("click", () => openMarket(card.dataset.symbol));
   });
   requestAnimationFrame(drawSparklines);
+}
+
+function renderTrade() {
+  if (!els.tradeMarketOptions) return;
+
+  const selected = findMarket(state.tradeSelectedSymbol) || state.markets.find((market) => market.liveSource) || state.markets[0];
+  if (!selected) return;
+  state.tradeSelectedSymbol = selected.symbol;
+
+  const change = getMarketChange(selected);
+  const sourceLabel = getMarketSourceLabel(selected);
+  els.tradeLiveStatus.textContent = state.liveStatus;
+  els.tradeLiveStatus.className = `status-pill compact ${state.liveStatus.includes("failed") ? "closed" : ""}`;
+  els.tradeSelectedSymbol.textContent = `$${selected.symbol}`;
+  els.tradeSelectedName.textContent = selected.name;
+  els.tradeQuotePrice.textContent = formatCurrency(selected.price);
+  els.tradeQuoteChange.textContent = formatPercent(change);
+  els.tradeQuoteChange.className = change < 0 ? "negative" : "positive";
+  els.tradeSourceLabel.textContent = sourceLabel;
+  els.tradeSourceLabel.className = `status-pill compact ${selected.privateMarket ? "closed" : ""}`;
+  els.tradeStatMarket.textContent = selected.name;
+  els.tradeStatType.textContent = selected.privateMarket ? "Private" : selected.liveSource ? "Live" : "Local";
+  els.tradeStatVolume.textContent = formatCompact(selected.volume);
+  els.tradeStatUpdated.textContent = selected.lastLiveAt ? formatClock(selected.lastLiveAt) : "Saved price";
+
+  els.tradeMarketOptions.innerHTML = state.markets
+    .map((market) => tradeMarketOptionTemplate(market, market.symbol === selected.symbol))
+    .join("");
+  els.tradeMarketOptions.querySelectorAll("[data-trade-symbol]").forEach((option) => {
+    option.addEventListener("click", () => selectTradeMarket(option.dataset.tradeSymbol));
+  });
+
+  requestAnimationFrame(drawVisibleCharts);
+}
+
+function tradeMarketOptionTemplate(market, active) {
+  const change = getMarketChange(market);
+  return `
+    <button class="trade-market-option ${active ? "active" : ""}" type="button" data-trade-symbol="${market.symbol}">
+      <span>
+        <strong>$${market.symbol}</strong>
+        <small>${escapeHtml(market.name)}</small>
+      </span>
+      <span>
+        <strong>${formatCurrency(market.price)}</strong>
+        <small class="${change < 0 ? "negative" : "positive"}">${formatPercent(change)}</small>
+      </span>
+    </button>
+  `;
+}
+
+function toggleTradeMarketMenu() {
+  const isHidden = els.tradeMarketMenu.classList.toggle("hidden");
+  els.tradeMarketSelectButton.setAttribute("aria-expanded", String(!isHidden));
+}
+
+function closeTradeMarketMenu() {
+  els.tradeMarketMenu?.classList.add("hidden");
+  els.tradeMarketSelectButton?.setAttribute("aria-expanded", "false");
+}
+
+function selectTradeMarket(symbol) {
+  state.tradeSelectedSymbol = symbol;
+  closeTradeMarketMenu();
+  renderTrade();
 }
 
 function handleCreateMarket(event) {
@@ -625,6 +881,8 @@ function marketCardTemplate(market) {
       <span class="market-meta">
         <span>${escapeHtml(market.industry)}</span>
         <span>${escapeHtml(market.headquarters)}</span>
+        ${market.liveSource ? `<span class="live-meta">Live</span>` : ""}
+        ${market.privateMarket ? `<span class="paused-meta">Private</span>` : ""}
         ${market.custom ? `<span>Custom</span>` : ""}
         ${market.isPaused ? `<span class="paused-meta">Paused</span>` : ""}
       </span>
@@ -1434,11 +1692,106 @@ function stopTicker() {
   }
 }
 
+function startLiveFeed() {
+  stopLiveFeed();
+  refreshLiveMarkets();
+  state.liveTimer = setInterval(refreshLiveMarkets, LIVE_REFRESH_MS);
+}
+
+function stopLiveFeed() {
+  if (state.liveTimer) {
+    clearInterval(state.liveTimer);
+    state.liveTimer = null;
+  }
+}
+
+async function refreshLiveMarkets() {
+  if (!state.user) return;
+
+  const liveMarkets = state.markets.filter((market) => market.liveSource);
+  if (!liveMarkets.length) return;
+
+  let updated = 0;
+  await Promise.all(
+    liveMarkets.map(async (market) => {
+      try {
+        const quote = await fetchLiveQuote(market);
+        applyLiveQuote(market, quote);
+        updated += 1;
+      } catch (error) {
+        market.liveError = error.message || "Live quote failed";
+      }
+    }),
+  );
+
+  state.liveStatus = updated ? `Live updated ${formatClock(Date.now())}` : "Live feed failed";
+  saveMarkets();
+  renderAll();
+}
+
+function fetchLiveQuote(market) {
+  if (market.liveSource.provider === "coingecko") {
+    return fetchCoinGeckoQuote(market.liveSource.id);
+  }
+  if (market.liveSource.provider === "stooq") {
+    return fetchStooqQuote(market.liveSource.symbol);
+  }
+  return Promise.reject(new Error("Unknown live source"));
+}
+
+async function fetchCoinGeckoQuote(id) {
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`;
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error("CoinGecko quote failed");
+  const data = await response.json();
+  const quote = data[id];
+  if (!quote || !Number.isFinite(Number(quote.usd))) throw new Error("CoinGecko quote missing");
+  return {
+    price: Number(quote.usd),
+    changePct: numberOr(quote.usd_24h_change, 0),
+    volume: numberOr(quote.usd_24h_vol, 0),
+    marketCap: numberOr(quote.usd_market_cap, 0),
+  };
+}
+
+async function fetchStooqQuote(symbol) {
+  const url = `https://stooq.com/q/l/?s=${encodeURIComponent(symbol)}&f=sd2t2ohlcv&h&e=csv&_=${Date.now()}`;
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error("Stooq quote failed");
+  const text = await response.text();
+  const [, line] = text.trim().split(/\r?\n/);
+  if (!line || line.includes("N/D")) throw new Error("Stooq quote missing");
+  const values = line.split(",");
+  const open = Number(values[3]);
+  const close = Number(values[6]);
+  const volume = Number(values[7]);
+  if (!Number.isFinite(close) || close <= 0) throw new Error("Stooq quote invalid");
+  return {
+    price: close,
+    open: Number.isFinite(open) && open > 0 ? open : close,
+    volume,
+  };
+}
+
+function applyLiveQuote(market, quote) {
+  const now = Date.now();
+  const price = roundMoney(quote.price);
+  market.price = price;
+  market.open = roundMoney(numberOr(quote.open, quote.changePct ? price / (1 + quote.changePct / 100) : market.open || price));
+  market.volume = Math.max(0, Math.round(numberOr(quote.volume, market.volume)));
+  market.marketCap = roundMoney(numberOr(quote.marketCap, market.marketCap));
+  market.lastLiveAt = now;
+  market.liveError = "";
+  market.history.push({ t: now, v: price });
+  market.history = market.history.slice(-MAX_MARKET_POINTS);
+}
+
 function advanceMarkets() {
   if (!getMarketSessionStatus().isOpen) return;
 
   const now = Date.now();
   state.markets.forEach((market) => {
+    if (market.liveSource || market.privateMarket) return;
     if (market.isPaused) return;
     const pct = (Math.random() * 2 - 1) * (market.tickLimit / 100);
     const next = Math.max(0.25, market.price * (1 + pct));
@@ -1681,7 +2034,136 @@ function drawVisibleCharts() {
     }
   }
 
+  if (els.tradeLineChart && els.tradeLineChart.offsetParent !== null) {
+    const market = findMarket(state.tradeSelectedSymbol) || state.markets[0];
+    if (market) {
+      const data = getMarketChartData(market);
+      drawLineChart(els.tradeLineChart, data, {
+        color: market.color,
+        accent: "#6fb1ff",
+        accent2: "#2fd179",
+        prefix: "$",
+        range: state.chartRange,
+        yTitle: "Price",
+        xTitle: "Time",
+      });
+      drawCandlestickChart(els.tradeCandleChart, buildCandles(data), { color: market.color, prefix: "$" });
+    }
+  }
+
   drawSparklines();
+}
+
+function buildCandles(points, limit = 42) {
+  if (!points.length) return [];
+  const candles = [];
+  const size = Math.max(1, Math.ceil(points.length / limit));
+
+  for (let index = 0; index < points.length; index += size) {
+    const chunk = points.slice(index, index + size);
+    const values = chunk.map((point) => point.v);
+    candles.push({
+      t: chunk[chunk.length - 1].t,
+      open: chunk[0].v,
+      high: Math.max(...values),
+      low: Math.min(...values),
+      close: chunk[chunk.length - 1].v,
+    });
+  }
+
+  return candles;
+}
+
+function drawCandlestickChart(canvas, candles, options = {}) {
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.round(rect.width * ratio));
+  const height = Math.max(1, Math.round(rect.height * ratio));
+
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  const w = rect.width;
+  const h = rect.height;
+  context.clearRect(0, 0, w, h);
+  if (!candles.length) return;
+
+  const isLight = document.body.dataset.theme === "light";
+  const padding = { top: 24, right: 26, bottom: 44, left: 68 };
+  const highs = candles.map((item) => item.high);
+  const lows = candles.map((item) => item.low);
+  let min = Math.min(...lows);
+  let max = Math.max(...highs);
+  if (min === max) {
+    min -= Math.max(1, min * 0.01);
+    max += Math.max(1, max * 0.01);
+  }
+  const range = max - min;
+  min -= range * 0.12;
+  max += range * 0.12;
+
+  const chartW = Math.max(1, w - padding.left - padding.right);
+  const chartH = Math.max(1, h - padding.top - padding.bottom);
+  const xFor = (index) => padding.left + (candles.length === 1 ? chartW / 2 : (index / (candles.length - 1)) * chartW);
+  const yFor = (value) => padding.top + (1 - (value - min) / (max - min)) * chartH;
+  const gridColor = isLight ? "rgba(222, 219, 210, 0.92)" : "rgba(74, 81, 91, 0.55)";
+  const axisColor = isLight ? "#dedbd2" : "#5a626d";
+  const labelColor = isLight ? "#8d8b86" : "#8f98a3";
+
+  const bgGradient = context.createLinearGradient(0, 0, w, h);
+  bgGradient.addColorStop(0, isLight ? "#ffffff" : "rgba(111, 177, 255, 0.08)");
+  bgGradient.addColorStop(1, isLight ? "#fbfaf7" : "rgba(13, 15, 18, 0.12)");
+  context.fillStyle = bgGradient;
+  context.fillRect(0, 0, w, h);
+
+  context.strokeStyle = gridColor;
+  context.fillStyle = labelColor;
+  context.font = "11px Inter, sans-serif";
+  context.textAlign = "right";
+  context.textBaseline = "middle";
+  for (let index = 0; index < 5; index += 1) {
+    const y = padding.top + (index / 4) * chartH;
+    context.beginPath();
+    context.moveTo(padding.left, y);
+    context.lineTo(w - padding.right, y);
+    context.stroke();
+    context.fillText(`${options.prefix || ""}${formatAxis(max - (index / 4) * (max - min))}`, padding.left - 10, y);
+  }
+
+  const candleWidth = Math.max(4, Math.min(14, chartW / candles.length * 0.48));
+  candles.forEach((candle, index) => {
+    const x = xFor(index);
+    const openY = yFor(candle.open);
+    const closeY = yFor(candle.close);
+    const highY = yFor(candle.high);
+    const lowY = yFor(candle.low);
+    const up = candle.close >= candle.open;
+    const color = up ? "#2fd179" : "#ff6b6b";
+
+    context.strokeStyle = color;
+    context.lineWidth = 1.6;
+    context.beginPath();
+    context.moveTo(x, highY);
+    context.lineTo(x, lowY);
+    context.stroke();
+
+    context.fillStyle = color;
+    const top = Math.min(openY, closeY);
+    const bodyHeight = Math.max(2, Math.abs(closeY - openY));
+    context.fillRect(x - candleWidth / 2, top, candleWidth, bodyHeight);
+  });
+
+  context.strokeStyle = axisColor;
+  context.beginPath();
+  context.moveTo(padding.left, padding.top);
+  context.lineTo(padding.left, h - padding.bottom);
+  context.lineTo(w - padding.right, h - padding.bottom);
+  context.stroke();
 }
 
 function drawSparklines() {
@@ -2207,6 +2689,22 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatClock(value) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(value));
+}
+
+function getMarketSourceLabel(market) {
+  if (market.liveSource?.provider === "coingecko") return "CoinGecko";
+  if (market.liveSource?.provider === "stooq") return "Stooq";
+  if (market.privateMarket) return "Private";
+  if (market.custom) return "Custom";
+  return "Local";
 }
 
 function formatChartTime(value, includeSeconds = false, range = "1D") {

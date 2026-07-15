@@ -62,6 +62,12 @@
               </span>
               <span>Markets</span>
             </button>
+            <button class="nav-item" type="button" data-view="trade">
+              <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M4 18h16M8 6v8M12 10v8M16 8v6" /></svg>
+              </span>
+              <span>Trade</span>
+            </button>
             <button class="nav-item" type="button" data-view="portfolio">
               <span class="nav-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M8 7V5h8v2M5 8h14v12H5zM8 11h8M8 15h5" /></svg>
@@ -216,6 +222,77 @@
 
         <section id="marketDetailView" class="view">
           <div id="marketDetailContent"></div>
+        </section>
+
+        <section id="tradeView" class="view">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="muted">Select a live market and inspect line movement plus candle bars.</p>
+            </div>
+            <span id="tradeLiveStatus" class="status-pill compact">Live feed</span>
+          </div>
+
+          <article class="trade-terminal">
+            <div class="trade-terminal-head">
+              <div class="trade-selector">
+                <button id="tradeMarketSelectButton" class="market-select-button" type="button" aria-expanded="false">
+                  <span>
+                    <strong id="tradeSelectedSymbol">$BTC</strong>
+                    <small id="tradeSelectedName">Bitcoin</small>
+                  </span>
+                  <span class="select-caret">v</span>
+                </button>
+                <div id="tradeMarketMenu" class="market-select-menu hidden">
+                  <div id="tradeMarketOptions" class="market-select-options"></div>
+                </div>
+              </div>
+
+              <div class="trade-quote">
+                <strong id="tradeQuotePrice">$0.00</strong>
+                <span id="tradeQuoteChange" class="positive">+0.00%</span>
+              </div>
+            </div>
+
+            <div class="trade-chart-grid">
+              <article class="panel trade-chart-panel">
+                <div class="panel-title-row">
+                  <h3>Price Graph</h3>
+                  <span id="tradeSourceLabel" class="status-pill compact">Live</span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="tradeLineChart" width="900" height="330" aria-label="Selected market price graph"></canvas>
+                </div>
+              </article>
+
+              <article class="panel trade-chart-panel">
+                <div class="panel-title-row">
+                  <h3>Candlestick Bars</h3>
+                  <span class="status-pill compact">OHLC</span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="tradeCandleChart" width="900" height="330" aria-label="Selected market candlestick chart"></canvas>
+                </div>
+              </article>
+            </div>
+
+            <div class="trade-stats-grid">
+              <article class="metric-card">
+                <p>Market</p>
+                <strong id="tradeStatMarket">Bitcoin</strong>
+                <span id="tradeStatType" class="metric-note">Crypto</span>
+              </article>
+              <article class="metric-card">
+                <p>Volume</p>
+                <strong id="tradeStatVolume">0</strong>
+                <span class="metric-note">Latest feed</span>
+              </article>
+              <article class="metric-card">
+                <p>Last update</p>
+                <strong id="tradeStatUpdated">Waiting</strong>
+                <span class="metric-note">Local time</span>
+              </article>
+            </div>
+          </article>
         </section>
 
         <section id="portfolioView" class="view">
