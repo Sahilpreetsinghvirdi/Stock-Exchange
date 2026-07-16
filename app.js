@@ -310,6 +310,7 @@ const state = {
   chartRange: "1D",
   tradeSelectedSymbol: "BTC",
   liveStatus: "Waiting for live feed",
+  expandedChartKind: null,
 };
 
 const els = {};
@@ -413,6 +414,12 @@ function bindElements() {
   els.tradeStatType = document.querySelector("#tradeStatType");
   els.tradeStatVolume = document.querySelector("#tradeStatVolume");
   els.tradeStatUpdated = document.querySelector("#tradeStatUpdated");
+  els.chartExpandButtons = Array.from(document.querySelectorAll("[data-expand-chart]"));
+  els.expandedChartOverlay = document.querySelector("#expandedChartOverlay");
+  els.expandedChartClose = document.querySelector("#expandedChartClose");
+  els.expandedChartTitle = document.querySelector("#expandedChartTitle");
+  els.expandedChartKicker = document.querySelector("#expandedChartKicker");
+  els.expandedChartCanvas = document.querySelector("#expandedChartCanvas");
   els.developerPhoto = document.querySelector("#developerPhoto");
   els.portfolioSubtext = document.querySelector("#portfolioSubtext");
   els.portfolioTotalValue = document.querySelector("#portfolioTotalValue");
@@ -445,6 +452,18 @@ function bindEvents() {
     els.marketSymbolInput.value = normalizeMarketSymbol(els.marketSymbolInput.value);
   });
   els.marketCreateForm?.addEventListener("submit", handleCreateMarket);
+  els.chartExpandButtons.forEach((button) => {
+    button.addEventListener("click", () => openExpandedChart(button.dataset.expandChart));
+  });
+  els.tradeLineChart?.addEventListener("click", () => openExpandedChart("line"));
+  els.tradeCandleChart?.addEventListener("click", () => openExpandedChart("candle"));
+  els.expandedChartClose?.addEventListener("click", closeExpandedChart);
+  els.expandedChartOverlay?.addEventListener("click", (event) => {
+    if (event.target === els.expandedChartOverlay) closeExpandedChart();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeExpandedChart();
+  });
   els.developerPhoto?.addEventListener("error", () => {
     els.developerPhoto.classList.add("is-hidden");
   });
@@ -779,6 +798,53 @@ function selectTradeMarket(symbol) {
   state.tradeSelectedSymbol = symbol;
   closeTradeMarketMenu();
   renderTrade();
+}
+
+function openExpandedChart(kind) {
+  const normalizedKind = kind === "candle" ? "candle" : "line";
+  state.expandedChartKind = normalizedKind;
+  els.expandedChartOverlay?.classList.remove("hidden");
+  document.body.classList.add("chart-expanded-open");
+  renderExpandedChart();
+}
+
+function closeExpandedChart() {
+  if (!state.expandedChartKind) return;
+  state.expandedChartKind = null;
+  els.expandedChartOverlay?.classList.add("hidden");
+  document.body.classList.remove("chart-expanded-open");
+}
+
+function renderExpandedChart() {
+  if (!state.expandedChartKind || !els.expandedChartCanvas) return;
+
+  const market = findMarket(state.tradeSelectedSymbol) || state.markets[0];
+  if (!market) return;
+  const data = getMarketChartData(market);
+  const isCandle = state.expandedChartKind === "candle";
+
+  els.expandedChartTitle.textContent = `${isCandle ? "Candlestick Bars" : "Price Graph"} - $${market.symbol}`;
+  els.expandedChartKicker.textContent = `${market.name} - ${getMarketSourceLabel(market)}`;
+
+  if (isCandle) {
+    drawCandlestickChart(els.expandedChartCanvas, buildCandles(data, 72), {
+      color: market.color,
+      prefix: "$",
+      range: state.chartRange,
+      expanded: true,
+    });
+    return;
+  }
+
+  drawLineChart(els.expandedChartCanvas, data, {
+    color: market.color,
+    accent: "#6fb1ff",
+    accent2: "#2fd179",
+    prefix: "$",
+    range: state.chartRange,
+    yTitle: "Price",
+    xTitle: "Time",
+  });
 }
 
 function handleCreateMarket(event) {
@@ -2047,10 +2113,15 @@ function drawVisibleCharts() {
         yTitle: "Price",
         xTitle: "Time",
       });
-      drawCandlestickChart(els.tradeCandleChart, buildCandles(data), { color: market.color, prefix: "$" });
+      drawCandlestickChart(els.tradeCandleChart, buildCandles(data), {
+        color: market.color,
+        prefix: "$",
+        range: state.chartRange,
+      });
     }
   }
 
+  renderExpandedChart();
   drawSparklines();
 }
 
@@ -2076,6 +2147,10 @@ function buildCandles(points, limit = 42) {
 
 function drawCandlestickChart(canvas, candles, options = {}) {
   if (!canvas) return;
+  if (options.hover !== false) {
+    bindChartHover(canvas);
+  }
+
   const context = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
   const ratio = window.devicePixelRatio || 1;
@@ -2114,6 +2189,10 @@ function drawCandlestickChart(canvas, candles, options = {}) {
   const gridColor = isLight ? "rgba(222, 219, 210, 0.92)" : "rgba(74, 81, 91, 0.55)";
   const axisColor = isLight ? "#dedbd2" : "#5a626d";
   const labelColor = isLight ? "#8d8b86" : "#8f98a3";
+  const titleColor = isLight ? "#73706b" : "#a7b0bb";
+  const tooltipBg = isLight ? "rgba(255, 255, 255, 0.96)" : "rgba(13, 15, 18, 0.94)";
+  const tooltipText = isLight ? "#151515" : "#f0f2f4";
+  const tooltipSubtext = isLight ? "#78756f" : "#9da4ad";
 
   const bgGradient = context.createLinearGradient(0, 0, w, h);
   bgGradient.addColorStop(0, isLight ? "#ffffff" : "rgba(111, 177, 255, 0.08)");
@@ -2133,6 +2212,15 @@ function drawCandlestickChart(canvas, candles, options = {}) {
     context.lineTo(w - padding.right, y);
     context.stroke();
     context.fillText(`${options.prefix || ""}${formatAxis(max - (index / 4) * (max - min))}`, padding.left - 10, y);
+  }
+
+  context.textAlign = "center";
+  context.textBaseline = "top";
+  const xTicks = Math.min(5, candles.length);
+  for (let index = 0; index < xTicks; index += 1) {
+    const candleIndex = xTicks === 1 ? 0 : Math.round((index / (xTicks - 1)) * (candles.length - 1));
+    const x = xFor(candleIndex);
+    context.fillText(formatChartTime(candles[candleIndex].t, false, options.range), x, h - padding.bottom + 10);
   }
 
   const candleWidth = Math.max(4, Math.min(14, chartW / candles.length * 0.48));
@@ -2164,6 +2252,80 @@ function drawCandlestickChart(canvas, candles, options = {}) {
   context.lineTo(padding.left, h - padding.bottom);
   context.lineTo(w - padding.right, h - padding.bottom);
   context.stroke();
+
+  context.fillStyle = titleColor;
+  context.font = "700 11px Inter, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText("Time", padding.left + chartW / 2, h - 14);
+  context.save();
+  context.translate(16, padding.top + chartH / 2);
+  context.rotate(-Math.PI / 2);
+  context.fillText("OHLC", 0, 0);
+  context.restore();
+
+  const hover = state.chartHover.get(canvas);
+  if (hover && options.hover !== false) {
+    const hoverX = Math.min(w - padding.right, Math.max(padding.left, hover.x));
+    const ratioX = chartW ? (hoverX - padding.left) / chartW : 0;
+    const index = Math.min(candles.length - 1, Math.max(0, Math.round(ratioX * (candles.length - 1))));
+    const candle = candles[index];
+    const x = xFor(index);
+    const openY = yFor(candle.open);
+    const closeY = yFor(candle.close);
+    const highY = yFor(candle.high);
+    const lowY = yFor(candle.low);
+    const up = candle.close >= candle.open;
+    const candleColor = up ? "#2fd179" : "#ff6b6b";
+
+    context.save();
+    context.strokeStyle = isLight ? "rgba(21, 21, 21, 0.32)" : "rgba(240, 242, 244, 0.68)";
+    context.setLineDash([5, 5]);
+    context.beginPath();
+    context.moveTo(x, padding.top);
+    context.lineTo(x, h - padding.bottom);
+    context.stroke();
+    context.setLineDash([]);
+
+    context.strokeStyle = candleColor;
+    context.lineWidth = 2.4;
+    context.beginPath();
+    context.moveTo(x, highY);
+    context.lineTo(x, lowY);
+    context.stroke();
+    context.fillStyle = candleColor;
+    context.fillRect(x - candleWidth / 2 - 1, Math.min(openY, closeY), candleWidth + 2, Math.max(3, Math.abs(closeY - openY)));
+
+    const lines = [
+      formatChartTime(candle.t, true, options.range),
+      `O ${formatCurrency(candle.open)}   H ${formatCurrency(candle.high)}`,
+      `L ${formatCurrency(candle.low)}   C ${formatCurrency(candle.close)}`,
+    ];
+    context.font = "800 12px Inter, sans-serif";
+    const boxWidth = Math.max(190, ...lines.map((line) => context.measureText(line).width + 24));
+    const boxHeight = 66;
+    let boxX = x + 14;
+    let boxY = Math.min(openY, closeY, highY) - boxHeight - 12;
+    if (boxX + boxWidth > w - 8) boxX = x - boxWidth - 14;
+    if (boxY < 8) boxY = Math.max(8, lowY + 12);
+    boxY = Math.min(h - boxHeight - 8, Math.max(8, boxY));
+
+    context.fillStyle = tooltipBg;
+    context.strokeStyle = isLight ? "#dedbd2" : candleColor;
+    context.lineWidth = 1;
+    context.fillRect(boxX, boxY, boxWidth, boxHeight);
+    context.strokeRect(boxX, boxY, boxWidth, boxHeight);
+    context.fillStyle = tooltipText;
+    context.textAlign = "left";
+    context.textBaseline = "top";
+    context.font = "800 12px Inter, sans-serif";
+    context.fillText(lines[0], boxX + 12, boxY + 8);
+    context.fillStyle = tooltipSubtext;
+    context.font = "11px Inter, sans-serif";
+    context.fillText(lines[1], boxX + 12, boxY + 28);
+    context.fillText(lines[2], boxX + 12, boxY + 46);
+    context.restore();
+  }
 }
 
 function drawSparklines() {

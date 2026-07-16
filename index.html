@@ -257,7 +257,10 @@
               <article class="panel trade-chart-panel">
                 <div class="panel-title-row">
                   <h3>Price Graph</h3>
-                  <span id="tradeSourceLabel" class="status-pill compact">Live</span>
+                  <div class="chart-tools">
+                    <span id="tradeSourceLabel" class="status-pill compact">Live</span>
+                    <button class="chart-expand-button" type="button" data-expand-chart="line">Wide view</button>
+                  </div>
                 </div>
                 <div class="chart-wrap">
                   <canvas id="tradeLineChart" width="900" height="330" aria-label="Selected market price graph"></canvas>
@@ -267,7 +270,10 @@
               <article class="panel trade-chart-panel">
                 <div class="panel-title-row">
                   <h3>Candlestick Bars</h3>
-                  <span class="status-pill compact">OHLC</span>
+                  <div class="chart-tools">
+                    <span class="status-pill compact">OHLC</span>
+                    <button class="chart-expand-button" type="button" data-expand-chart="candle">Wide view</button>
+                  </div>
                 </div>
                 <div class="chart-wrap">
                   <canvas id="tradeCandleChart" width="900" height="330" aria-label="Selected market candlestick chart"></canvas>
@@ -386,7 +392,7 @@
               <img
                 id="developerPhoto"
                 class="developer-photo"
-                src="https://avatars.githubusercontent.com/ksahilpreetsingh1980?s=260"
+                src="https://github.com/Sahilpreetsinghvirdi.png?size=260"
                 alt="Sahil Preet Singh GitHub profile"
               />
             </div>
@@ -407,7 +413,7 @@
                 custom markets, reports, and a smooth dashboard experience.
               </p>
               <div class="developer-actions">
-                <a class="primary-button link-action" href="https://github.com/ksahilpreetsingh1980" target="_blank" rel="noreferrer">Open GitHub</a>
+                <a class="primary-button link-action" href="https://github.com/Sahilpreetsinghvirdi" target="_blank" rel="noreferrer">Open GitHub</a>
                 <button class="ghost-button" type="button" data-view-target="upcoming">Back to Upcoming</button>
               </div>
             </div>
@@ -429,6 +435,21 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <div id="expandedChartOverlay" class="expanded-chart-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="expandedChartTitle">
+      <div class="expanded-chart-shell">
+        <header class="expanded-chart-head">
+          <div>
+            <p id="expandedChartKicker" class="eyebrow">Trade View</p>
+            <h2 id="expandedChartTitle">Expanded Chart</h2>
+          </div>
+          <button id="expandedChartClose" class="ghost-button" type="button">Close</button>
+        </header>
+        <div class="expanded-chart-wrap">
+          <canvas id="expandedChartCanvas" width="1400" height="640" aria-label="Expanded selected market chart"></canvas>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
