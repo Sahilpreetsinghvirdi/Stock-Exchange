@@ -3086,7 +3086,7 @@ function getMarketChange(market) {
 }
 
 function saveUsers() {
-  if (state.user) {
+  if (state.user && !state.isAdmin) {
     state.users[state.user.email] = state.user;
   }
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(state.users));
