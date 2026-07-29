@@ -419,7 +419,7 @@
                 custom markets, reports, and a smooth dashboard experience.
               </p>
               <div class="developer-actions">
-                <a class="primary-button link-action" href="https://github.com/Sahilpreetsinghvirdi" target="_blank" rel="noreferrer">Open GitHub</a>
+                <button id="developerGithubButton" class="primary-button" type="button">Open GitHub</button>
                 <button class="ghost-button" type="button" data-view-target="upcoming">Back to Upcoming</button>
               </div>
             </div>
@@ -495,6 +495,28 @@
           <canvas id="expandedChartCanvas" width="1400" height="640" aria-label="Expanded selected market chart"></canvas>
         </div>
       </div>
+    </div>
+
+    <div id="developerAccessOverlay" class="developer-access-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="developerAccessTitle">
+      <form id="developerAccessForm" class="developer-access-dialog">
+        <div class="developer-access-head">
+          <div>
+            <p class="eyebrow">Protected Link</p>
+            <h2 id="developerAccessTitle">Open GitHub</h2>
+          </div>
+          <button id="developerAccessClose" class="ghost-button" type="button">Close</button>
+        </div>
+        <p class="muted">Enter the password to open the developer GitHub profile.</p>
+        <label>
+          Password
+          <input id="developerAccessPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="developerAccessMessage" class="form-message" aria-live="polite"></p>
+        <div class="developer-access-actions">
+          <button id="developerAccessCancel" class="ghost-button" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Continue to GitHub</button>
+        </div>
+      </form>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>

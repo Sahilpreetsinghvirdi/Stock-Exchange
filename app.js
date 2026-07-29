@@ -4,6 +4,8 @@ const SESSION_STORAGE_KEY = "stock_exchange_session_v1";
 const THEME_STORAGE_KEY = "stock_exchange_theme_v1";
 const ADMIN_USERNAME = "sahilvirdi";
 const ADMIN_PASSWORD = "Ridhimasood";
+const DEVELOPER_GITHUB_URL = "https://github.com/Sahilpreetsinghvirdi";
+const DEVELOPER_GITHUB_PASSWORD = "Ridhimasood";
 
 const STARTING_CASH = 100;
 const ACCOUNT_BALANCE_VERSION = 3;
@@ -426,6 +428,13 @@ function bindElements() {
   els.expandedChartKicker = document.querySelector("#expandedChartKicker");
   els.expandedChartCanvas = document.querySelector("#expandedChartCanvas");
   els.developerPhoto = document.querySelector("#developerPhoto");
+  els.developerGithubButton = document.querySelector("#developerGithubButton");
+  els.developerAccessOverlay = document.querySelector("#developerAccessOverlay");
+  els.developerAccessForm = document.querySelector("#developerAccessForm");
+  els.developerAccessPassword = document.querySelector("#developerAccessPassword");
+  els.developerAccessMessage = document.querySelector("#developerAccessMessage");
+  els.developerAccessClose = document.querySelector("#developerAccessClose");
+  els.developerAccessCancel = document.querySelector("#developerAccessCancel");
   els.portfolioSubtext = document.querySelector("#portfolioSubtext");
   els.portfolioTotalValue = document.querySelector("#portfolioTotalValue");
   els.portfolioTotalChange = document.querySelector("#portfolioTotalChange");
@@ -472,7 +481,10 @@ function bindEvents() {
     if (event.target === els.expandedChartOverlay) closeExpandedChart();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeExpandedChart();
+    if (event.key === "Escape") {
+      closeExpandedChart();
+      closeDeveloperAccessDialog();
+    }
   });
   els.developerPhoto?.addEventListener("error", () => {
     els.developerPhoto.classList.add("is-hidden");
@@ -480,6 +492,13 @@ function bindEvents() {
   els.developerPhoto?.addEventListener("load", () => {
     els.developerPhoto.classList.remove("is-hidden");
   });
+  els.developerGithubButton?.addEventListener("click", openDeveloperAccessDialog);
+  els.developerAccessClose?.addEventListener("click", closeDeveloperAccessDialog);
+  els.developerAccessCancel?.addEventListener("click", closeDeveloperAccessDialog);
+  els.developerAccessOverlay?.addEventListener("click", (event) => {
+    if (event.target === els.developerAccessOverlay) closeDeveloperAccessDialog();
+  });
+  els.developerAccessForm?.addEventListener("submit", handleDeveloperAccess);
   els.marketBackButton?.addEventListener("click", () => showView("markets"));
   els.tradeMarketSelectButton?.addEventListener("click", () => toggleTradeMarketMenu());
   document.addEventListener("click", (event) => {
@@ -1110,6 +1129,38 @@ function closeExpandedChart() {
   state.expandedChartKind = null;
   els.expandedChartOverlay?.classList.add("hidden");
   document.body.classList.remove("chart-expanded-open");
+}
+
+function openDeveloperAccessDialog() {
+  els.developerAccessForm?.reset();
+  els.developerAccessMessage.textContent = "";
+  els.developerAccessOverlay?.classList.remove("hidden");
+  document.body.classList.add("developer-access-open");
+  requestAnimationFrame(() => els.developerAccessPassword?.focus());
+}
+
+function closeDeveloperAccessDialog() {
+  if (els.developerAccessOverlay?.classList.contains("hidden")) return;
+  els.developerAccessOverlay.classList.add("hidden");
+  document.body.classList.remove("developer-access-open");
+  els.developerGithubButton?.focus();
+}
+
+function handleDeveloperAccess(event) {
+  event.preventDefault();
+  const password = els.developerAccessPassword.value;
+  if (password !== DEVELOPER_GITHUB_PASSWORD) {
+    els.developerAccessMessage.textContent = "Password does not match.";
+    els.developerAccessPassword.focus();
+    return;
+  }
+
+  const githubWindow = window.open(DEVELOPER_GITHUB_URL, "_blank", "noopener,noreferrer");
+  if (!githubWindow) {
+    els.developerAccessMessage.textContent = "Allow pop-ups to open GitHub.";
+    return;
+  }
+  closeDeveloperAccessDialog();
 }
 
 function renderExpandedChart() {
@@ -2721,6 +2772,7 @@ function drawLineChart(canvas, data, options = {}) {
   const chartH = Math.max(1, h - padding.top - padding.bottom);
   const xFor = (index) => padding.left + (points.length === 1 ? 0 : (index / (points.length - 1)) * chartW);
   const yFor = (value) => padding.top + (1 - (value - min) / (max - min)) * chartH;
+  const chartPoints = points.map((point, index) => ({ x: xFor(index), y: yFor(point.v) }));
 
   if (!compact) {
     const bgGradient = context.createLinearGradient(0, 0, w, h);
@@ -2791,15 +2843,27 @@ function drawLineChart(canvas, data, options = {}) {
   }
 
   function traceLine() {
-    points.forEach((point, index) => {
-      const x = xFor(index);
-      const y = yFor(point.v);
-      if (index === 0) {
-        context.moveTo(x, y);
-      } else {
-        context.lineTo(x, y);
-      }
-    });
+    if (chartPoints.length === 1) {
+      context.moveTo(chartPoints[0].x, chartPoints[0].y);
+      return;
+    }
+
+    context.moveTo(chartPoints[0].x, chartPoints[0].y);
+    const curveStrength = options.curveStrength ?? 0.19;
+    for (let index = 0; index < chartPoints.length - 1; index += 1) {
+      const previous = chartPoints[Math.max(0, index - 1)];
+      const current = chartPoints[index];
+      const next = chartPoints[index + 1];
+      const following = chartPoints[Math.min(chartPoints.length - 1, index + 2)];
+      context.bezierCurveTo(
+        current.x + (next.x - previous.x) * curveStrength,
+        current.y + (next.y - previous.y) * curveStrength,
+        next.x - (following.x - current.x) * curveStrength,
+        next.y - (following.y - current.y) * curveStrength,
+        next.x,
+        next.y,
+      );
+    }
   }
 
   if (options.fill !== "transparent") {

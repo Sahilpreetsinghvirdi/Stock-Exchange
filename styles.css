@@ -2027,6 +2027,63 @@ body[data-theme="light"] .developer-tags span {
   color: var(--text);
 }
 
+.developer-access-open {
+  overflow: hidden;
+}
+
+.developer-access-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 7, 10, 0.68);
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.developer-access-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(390px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  animation: chart-pop 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.developer-access-head,
+.developer-access-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.developer-access-head .eyebrow {
+  margin-bottom: 4px;
+}
+
+.developer-access-head h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+}
+
+.developer-access-dialog > label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.developer-access-dialog .form-message {
+  min-height: 16px;
+}
+
 .chart-expanded-open {
   overflow: hidden;
 }
