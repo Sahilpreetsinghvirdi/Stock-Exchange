@@ -1803,6 +1803,226 @@ body[data-theme="light"] .developer-tags span {
   margin: 0 0 10px;
 }
 
+.admin-mode .sidebar-card {
+  display: none;
+}
+
+.admin-panel {
+  padding: 16px;
+}
+
+.admin-panel-heading {
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-panel-heading .muted {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.admin-users-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-user-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 14px;
+}
+
+.admin-user-head,
+.admin-user-footer,
+.admin-account-summary,
+.admin-holdings-head,
+.admin-holding-row {
+  display: flex;
+  align-items: center;
+}
+
+.admin-user-head {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-user-head .eyebrow {
+  margin-bottom: 4px;
+}
+
+.admin-user-head h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+}
+
+.admin-user-head .muted {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.admin-user-value {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 3px;
+  text-align: right;
+}
+
+.admin-user-value span {
+  color: var(--muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-user-value strong {
+  font-size: 19px;
+}
+
+.admin-account-summary {
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin-top: 13px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-controls-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1.3fr);
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.admin-controls-grid label,
+.admin-add-holding {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-add-holding > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px auto;
+  gap: 8px;
+}
+
+.admin-add-holding select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0 10px;
+}
+
+.admin-add-holding .secondary-button,
+.admin-remove-button {
+  min-height: 40px;
+}
+
+.admin-holdings-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.admin-holdings-head {
+  justify-content: space-between;
+  color: var(--muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-holdings-head span:last-child {
+  margin-right: 84px;
+}
+
+.admin-holding-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 94px 76px;
+  gap: 8px;
+}
+
+.admin-holding-row > div {
+  min-width: 0;
+}
+
+.admin-holding-row strong,
+.admin-holding-row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-holding-row strong {
+  font-size: 13px;
+}
+
+.admin-holding-row small {
+  margin-top: 2px;
+  color: var(--muted-2);
+  font-size: 11px;
+}
+
+.admin-holding-row input {
+  min-height: 34px;
+  padding: 0 9px;
+}
+
+.admin-remove-button {
+  min-height: 34px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.admin-no-holdings {
+  margin: 0;
+  color: var(--muted-2);
+  font-size: 12px;
+}
+
+.admin-user-footer {
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.admin-account-message {
+  min-height: 16px;
+  margin: 0;
+  color: var(--red);
+  font-size: 12px;
+}
+
+.admin-empty-state {
+  display: grid;
+  gap: 4px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 28px;
+  text-align: center;
+}
+
+.admin-empty-state strong {
+  color: var(--text);
+}
+
 .chart-expanded-open {
   overflow: hidden;
 }
@@ -1931,7 +2151,8 @@ body[data-theme="light"] .expanded-chart-wrap {
   .trade-chart-grid,
   .portfolio-grid,
   .company-section,
-  .developer-profile {
+  .developer-profile,
+  .admin-controls-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -2019,5 +2240,23 @@ body[data-theme="light"] .expanded-chart-wrap {
 
   .expanded-chart-wrap {
     min-height: 58vh;
+  }
+
+  .admin-user-head,
+  .admin-user-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-user-value {
+    text-align: left;
+  }
+
+  .admin-add-holding > div {
+    grid-template-columns: minmax(0, 1fr) 82px;
+  }
+
+  .admin-add-holding .secondary-button {
+    grid-column: 1 / -1;
   }
 }

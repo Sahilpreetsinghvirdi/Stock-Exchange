@@ -2,6 +2,8 @@ const MARKET_STORAGE_KEY = "stock_exchange_markets_v1";
 const USERS_STORAGE_KEY = "stock_exchange_users_v1";
 const SESSION_STORAGE_KEY = "stock_exchange_session_v1";
 const THEME_STORAGE_KEY = "stock_exchange_theme_v1";
+const ADMIN_USERNAME = "sahilvirdi";
+const ADMIN_PASSWORD = "Ridhimasood";
 
 const STARTING_CASH = 100;
 const ACCOUNT_BALANCE_VERSION = 3;
@@ -311,6 +313,7 @@ const state = {
   tradeSelectedSymbol: "BTC",
   liveStatus: "Waiting for live feed",
   expandedChartKind: null,
+  isAdmin: false,
 };
 
 const els = {};
@@ -325,7 +328,7 @@ function init() {
   bindEvents();
 
   const sessionEmail = localStorage.getItem(SESSION_STORAGE_KEY);
-  if (sessionEmail && state.users[sessionEmail]) {
+  if (sessionEmail && (isAdministratorId(sessionEmail) || state.users[sessionEmail])) {
     startSession(sessionEmail);
   } else {
     showAuth();
@@ -370,11 +373,13 @@ function bindElements() {
     news: document.querySelector("#newsView"),
     upcoming: document.querySelector("#upcomingView"),
     developer: document.querySelector("#developerView"),
+    admin: document.querySelector("#adminView"),
   };
   els.pageTitle = document.querySelector("#pageTitle");
   els.sessionLine = document.querySelector("#sessionLine");
   els.sidebarEmail = document.querySelector("#sidebarEmail");
   els.sidebarCash = document.querySelector("#sidebarCash");
+  els.sidebarAccountNote = document.querySelector("#sidebarAccountNote");
   els.sidebarMarketState = document.querySelector("#sidebarMarketState");
   els.sidebarMarketTime = document.querySelector("#sidebarMarketTime");
   els.welcomeLine = document.querySelector("#welcomeLine");
@@ -437,6 +442,11 @@ function bindElements() {
   els.signOutButton = document.querySelector("#signOutButton");
   els.themeToggleButton = document.querySelector("#themeToggleButton");
   els.themeToggleLabel = document.querySelector("#themeToggleLabel");
+  els.adminAccountCount = document.querySelector("#adminAccountCount");
+  els.adminCashTotal = document.querySelector("#adminCashTotal");
+  els.adminPositionCount = document.querySelector("#adminPositionCount");
+  els.adminUsersList = document.querySelector("#adminUsersList");
+  els.adminRefreshButton = document.querySelector("#adminRefreshButton");
   els.toast = document.querySelector("#toast");
 }
 
@@ -480,6 +490,8 @@ function bindEvents() {
   els.downloadReportButton.addEventListener("click", downloadReport);
   els.signOutButton.addEventListener("click", signOut);
   els.themeToggleButton.addEventListener("click", toggleTheme);
+  els.adminRefreshButton?.addEventListener("click", renderAdmin);
+  els.adminUsersList?.addEventListener("click", handleAdminAction);
   window.addEventListener("resize", () => {
     clearTimeout(state.resizeTimer);
     state.resizeTimer = setTimeout(drawVisibleCharts, 120);
@@ -491,6 +503,16 @@ function handleLogin(event) {
   const email = els.emailInput.value.trim().toLowerCase();
   const password = els.passwordInput.value;
   els.loginMessage.textContent = "";
+
+  if (isAdministratorId(email)) {
+    if (password !== ADMIN_PASSWORD) {
+      els.loginMessage.textContent = "Administrator password does not match.";
+      return;
+    }
+    localStorage.setItem(SESSION_STORAGE_KEY, ADMIN_USERNAME);
+    startSession(ADMIN_USERNAME);
+    return;
+  }
 
   if (!/^[^\s@]+@gmail\.com$/.test(email)) {
     els.loginMessage.textContent = "Use a valid Gmail address.";
@@ -537,12 +559,46 @@ function createUser(email, password) {
 }
 
 function startSession(email) {
+  if (isAdministratorId(email)) {
+    startAdministratorSession();
+    return;
+  }
+
+  state.isAdmin = false;
   state.user = normalizeUser(state.users[email]);
+  state.user.lastLoginAt = Date.now();
   saveUsers();
   showApp();
   renderAll();
   startTicker();
   startLiveFeed();
+}
+
+function startAdministratorSession() {
+  state.isAdmin = true;
+  state.user = createAdministratorSessionUser();
+  showApp();
+  renderAll();
+  showView("admin");
+  startTicker();
+  startLiveFeed();
+}
+
+function isAdministratorId(identifier) {
+  return String(identifier || "").trim().toLowerCase() === ADMIN_USERNAME;
+}
+
+function createAdministratorSessionUser() {
+  const now = Date.now();
+  return {
+    email: "Administrator",
+    cash: 0,
+    startingCash: 0,
+    holdings: {},
+    trades: [],
+    realizedProfit: 0,
+    portfolioHistory: [{ t: now, v: 0 }],
+  };
 }
 
 function normalizeUser(user) {
@@ -588,16 +644,39 @@ function showAuth() {
 function showApp() {
   els.authScreen.classList.add("hidden");
   els.appShell.classList.remove("hidden");
+  syncAccountMode();
 }
 
 function signOut() {
   localStorage.removeItem(SESSION_STORAGE_KEY);
+  state.isAdmin = false;
   state.user = null;
+  syncAccountMode();
   els.loginForm.reset();
   showAuth();
 }
 
+function syncAccountMode() {
+  els.appShell.classList.toggle("admin-mode", state.isAdmin);
+  els.navItems.forEach((item) => {
+    const isAdminItem = item.hasAttribute("data-admin-only");
+    item.hidden = !state.isAdmin && isAdminItem;
+  });
+  els.downloadReportButton.hidden = state.isAdmin;
+  if (state.isAdmin) {
+    els.sessionLine.textContent = "Administrator";
+    els.sidebarEmail.textContent = "Administrator";
+    els.sidebarCash.textContent = "Account controls";
+    els.sidebarAccountNote.textContent = "Local browser data";
+  } else {
+    els.sidebarAccountNote.textContent = "Saved in this browser";
+  }
+}
+
 function showView(view, symbol) {
+  if (!state.isAdmin && view === "admin") {
+    view = "dashboard";
+  }
   if (symbol) {
     state.selectedSymbol = symbol;
   }
@@ -619,11 +698,15 @@ function showView(view, symbol) {
     news: "News",
     upcoming: "Upcoming",
     developer: "Developer",
+    admin: "Administration",
   };
   els.pageTitle.textContent = titles[view] || "Overview";
 
   if (view === "marketDetail") {
     renderMarketDetail();
+  }
+  if (view === "admin") {
+    renderAdmin();
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -632,11 +715,13 @@ function showView(view, symbol) {
 
 function renderAll() {
   if (!state.user) return;
-  els.sessionLine.textContent = state.user.email;
-  els.sidebarEmail.textContent = state.user.email;
-  els.sidebarCash.textContent = `${formatCurrency(state.user.cash)} cash`;
+  els.sessionLine.textContent = state.isAdmin ? "Administrator" : state.user.email;
+  els.sidebarEmail.textContent = state.isAdmin ? "Administrator" : state.user.email;
+  els.sidebarCash.textContent = state.isAdmin ? "Account controls" : `${formatCurrency(state.user.cash)} cash`;
   const session = getMarketSessionStatus();
-  els.welcomeLine.innerHTML = `Welcome back, ${escapeHtml(state.user.email)}. Market is currently <strong class="${session.isOpen ? "positive" : "negative"}">${session.label}</strong>`;
+  els.welcomeLine.innerHTML = state.isAdmin
+    ? `Administrator preview. Market is currently <strong class="${session.isOpen ? "positive" : "negative"}">${session.label}</strong>`
+    : `Welcome back, ${escapeHtml(state.user.email)}. Market is currently <strong class="${session.isOpen ? "positive" : "negative"}">${session.label}</strong>`;
   renderStatusPills();
   renderDashboard();
   renderMarkets();
@@ -644,10 +729,218 @@ function renderAll() {
   renderPortfolio();
   renderNews();
   renderUpcoming();
+  if (state.isAdmin) {
+    renderAdmin();
+  }
   if (state.currentView === "marketDetail") {
     updateMarketDetailLive();
   }
   requestAnimationFrame(drawVisibleCharts);
+}
+
+function renderAdmin() {
+  if (!state.isAdmin) return;
+  const users = Object.values(state.users)
+    .filter((user) => user && user.email && !isAdministratorId(user.email))
+    .sort((a, b) => numberOr(b.lastLoginAt, b.createdAt) - numberOr(a.lastLoginAt, a.createdAt));
+  const cashTotal = users.reduce((sum, user) => sum + numberOr(user.cash, 0), 0);
+  const positionCount = users.reduce(
+    (sum, user) => sum + Object.values(user.holdings || {}).filter((holding) => numberOr(holding.shares, 0) > 0).length,
+    0,
+  );
+
+  els.adminAccountCount.textContent = String(users.length);
+  els.adminCashTotal.textContent = formatCurrency(cashTotal);
+  els.adminPositionCount.textContent = String(positionCount);
+  els.adminUsersList.innerHTML = users.length
+    ? users.map((user) => adminUserTemplate(user)).join("")
+    : `<div class="admin-empty-state"><strong>No saved accounts yet.</strong><span>New Gmail sign-ins will appear here.</span></div>`;
+}
+
+function adminUserTemplate(user) {
+  const portfolio = calculatePortfolioForUser(user);
+  const accountKey = encodeURIComponent(user.email);
+  const holdings = Object.entries(user.holdings || {}).filter(([, holding]) => numberOr(holding.shares, 0) > 0);
+  const holdingRows = holdings.length
+    ? holdings
+        .map(([symbol, holding]) => {
+          const market = findMarket(symbol);
+          return `
+            <div class="admin-holding-row">
+              <div>
+                <strong>$${escapeHtml(symbol)}</strong>
+                <small>${escapeHtml(market ? market.name : "Unavailable market")}</small>
+              </div>
+              <input data-admin-shares data-symbol="${escapeHtml(symbol)}" type="number" min="0" step="1" value="${Math.floor(numberOr(holding.shares, 0))}" aria-label="${escapeHtml(symbol)} shares" />
+              <button class="ghost-button admin-remove-button" type="button" data-admin-action="remove-holding" data-symbol="${escapeHtml(symbol)}">Remove</button>
+            </div>
+          `;
+        })
+        .join("")
+    : `<p class="admin-no-holdings">No active holdings.</p>`;
+  const marketOptions = state.markets
+    .map((market) => `<option value="${escapeHtml(market.symbol)}">$${escapeHtml(market.symbol)} - ${escapeHtml(market.name)}</option>`)
+    .join("");
+
+  return `
+    <article class="admin-user-card" data-admin-email="${accountKey}">
+      <header class="admin-user-head">
+        <div>
+          <p class="eyebrow">Saved account</p>
+          <h3>${escapeHtml(user.email)}</h3>
+          <p class="muted">Last active ${formatAccountDate(user.lastLoginAt || user.createdAt)}</p>
+        </div>
+        <div class="admin-user-value">
+          <span>Total value</span>
+          <strong>${formatCurrency(portfolio.total)}</strong>
+        </div>
+      </header>
+      <div class="admin-account-summary">
+        <span>Cash ${formatCurrency(numberOr(user.cash, 0))}</span>
+        <span>Invested ${formatCurrency(portfolio.holdingsValue)}</span>
+        <span>${formatShares(holdings.reduce((sum, [, holding]) => sum + numberOr(holding.shares, 0), 0))} held</span>
+      </div>
+      <div class="admin-controls-grid">
+        <label>
+          Cash balance
+          <input data-admin-cash type="number" min="0" step="0.01" value="${numberOr(user.cash, 0).toFixed(2)}" />
+        </label>
+        <div class="admin-add-holding">
+          <span>Add shares</span>
+          <div>
+            <select data-admin-add-symbol aria-label="Market for new holding">${marketOptions}</select>
+            <input data-admin-add-shares type="number" min="1" step="1" placeholder="Shares" aria-label="Shares to add" />
+            <button class="secondary-button" type="button" data-admin-action="add-holding">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="admin-holdings-list">
+        <div class="admin-holdings-head"><span>Holdings</span><span>Shares</span></div>
+        ${holdingRows}
+      </div>
+      <footer class="admin-user-footer">
+        <p class="admin-account-message" aria-live="polite"></p>
+        <button class="primary-button" type="button" data-admin-action="save-account">Save changes</button>
+      </footer>
+    </article>
+  `;
+}
+
+function handleAdminAction(event) {
+  if (!state.isAdmin) return;
+  const button = event.target.closest("[data-admin-action]");
+  if (!button) return;
+  const card = button.closest(".admin-user-card");
+  if (!card) return;
+  const email = decodeURIComponent(card.dataset.adminEmail || "");
+  const user = state.users[email];
+  if (!user) return;
+
+  if (button.dataset.adminAction === "save-account") {
+    saveAdminAccount(user, card);
+    return;
+  }
+  if (button.dataset.adminAction === "add-holding") {
+    addAdminHolding(user, card);
+    return;
+  }
+  if (button.dataset.adminAction === "remove-holding") {
+    removeAdminHolding(user, button.dataset.symbol);
+  }
+}
+
+function saveAdminAccount(user, card) {
+  const cash = Number(card.querySelector("[data-admin-cash]").value);
+  if (!Number.isFinite(cash) || cash < 0) {
+    setAdminAccountMessage(card, "Enter a valid cash balance.");
+    return;
+  }
+
+  const holdings = {};
+  const holdingInputs = Array.from(card.querySelectorAll("[data-admin-shares]"));
+  for (const input of holdingInputs) {
+    const shares = Number(input.value);
+    const symbol = input.dataset.symbol;
+    if (!Number.isFinite(shares) || shares < 0 || !Number.isInteger(shares)) {
+      setAdminAccountMessage(card, "Enter zero or a whole number of shares.");
+      return;
+    }
+    const quantity = shares;
+    if (quantity > 0) {
+      const current = user.holdings?.[symbol] || {};
+      const market = findMarket(symbol);
+      holdings[symbol] = {
+        shares: quantity,
+        avgCost: numberOr(current.avgCost, market ? market.price : 0),
+      };
+    }
+  }
+
+  user.cash = roundMoney(cash);
+  user.holdings = holdings;
+  persistAdminAccount(user, `${user.email} updated.`);
+}
+
+function addAdminHolding(user, card) {
+  const symbol = card.querySelector("[data-admin-add-symbol]").value;
+  const shares = Number(card.querySelector("[data-admin-add-shares]").value);
+  const market = findMarket(symbol);
+  if (!market || !Number.isFinite(shares) || shares <= 0 || !Number.isInteger(shares)) {
+    setAdminAccountMessage(card, "Choose a market and enter at least one share.");
+    return;
+  }
+
+  const quantity = shares;
+  user.holdings = user.holdings || {};
+  const holding = user.holdings[symbol] || { shares: 0, avgCost: market.price };
+  holding.shares = numberOr(holding.shares, 0) + quantity;
+  holding.avgCost = numberOr(holding.avgCost, market.price);
+  user.holdings[symbol] = holding;
+  persistAdminAccount(user, `${quantity} $${symbol} shares added to ${user.email}.`);
+}
+
+function removeAdminHolding(user, symbol) {
+  if (!symbol || !user.holdings?.[symbol]) return;
+  delete user.holdings[symbol];
+  persistAdminAccount(user, `$${symbol} removed from ${user.email}.`);
+}
+
+function persistAdminAccount(user, message) {
+  user.lastAdminUpdatedAt = Date.now();
+  appendPortfolioPointForUser(user);
+  state.users[user.email] = user;
+  saveUsers();
+  renderAdmin();
+  toast(message);
+}
+
+function setAdminAccountMessage(card, message) {
+  const messageNode = card.querySelector(".admin-account-message");
+  if (messageNode) messageNode.textContent = message;
+}
+
+function calculatePortfolioForUser(user) {
+  const cash = numberOr(user.cash, 0);
+  const holdingsValue = Object.entries(user.holdings || {}).reduce((sum, [symbol, holding]) => {
+    const market = findMarket(symbol);
+    return sum + (market ? market.price * numberOr(holding.shares, 0) : 0);
+  }, 0);
+  return {
+    cash,
+    holdingsValue: roundMoney(holdingsValue),
+    total: roundMoney(cash + holdingsValue),
+  };
+}
+
+function appendPortfolioPointForUser(user) {
+  user.portfolioHistory = Array.isArray(user.portfolioHistory) ? user.portfolioHistory : [];
+  user.portfolioHistory.push({ t: Date.now(), v: calculatePortfolioForUser(user).total });
+  user.portfolioHistory = user.portfolioHistory.slice(-MAX_POINTS);
+}
+
+function formatAccountDate(value) {
+  if (!value) return "not recorded";
+  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 function renderStatusPills() {
