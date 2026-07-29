@@ -729,7 +729,7 @@ function renderAll() {
   renderPortfolio();
   renderNews();
   renderUpcoming();
-  if (state.isAdmin) {
+  if (state.isAdmin && !isAdminEditorFocused()) {
     renderAdmin();
   }
   if (state.currentView === "marketDetail") {
@@ -755,6 +755,10 @@ function renderAdmin() {
   els.adminUsersList.innerHTML = users.length
     ? users.map((user) => adminUserTemplate(user)).join("")
     : `<div class="admin-empty-state"><strong>No saved accounts yet.</strong><span>New Gmail sign-ins will appear here.</span></div>`;
+}
+
+function isAdminEditorFocused() {
+  return Boolean(els.adminUsersList?.contains(document.activeElement));
 }
 
 function adminUserTemplate(user) {

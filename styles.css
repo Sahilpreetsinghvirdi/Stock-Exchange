@@ -412,6 +412,10 @@ body[data-theme="light"] #themeToggleLabel {
   text-align: left;
 }
 
+.nav-item[hidden] {
+  display: none !important;
+}
+
 .nav-icon {
   display: grid;
   flex: 0 0 auto;
