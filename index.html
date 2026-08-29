@@ -148,6 +148,14 @@
                   <p id="dashboardCashLine" class="muted"></p>
                 </div>
               </div>
+              <div class="timeframe-tabs" aria-label="Portfolio chart range">
+                <button class="range-button" type="button" data-range="1H">1H</button>
+                <button class="range-button active" type="button" data-range="1D">1D</button>
+                <button class="range-button" type="button" data-range="1W">1W</button>
+                <button class="range-button" type="button" data-range="1M">1M</button>
+                <button class="range-button" type="button" data-range="3M">3M</button>
+                <button class="range-button" type="button" data-range="1Y">1Y</button>
+              </div>
               <div class="chart-wrap">
                 <canvas id="wealthChart" width="900" height="330" aria-label="Portfolio value chart"></canvas>
               </div>
@@ -268,6 +276,14 @@
                     <button class="chart-expand-button" type="button" data-expand-chart="line">Wide view</button>
                   </div>
                 </div>
+                <div class="timeframe-tabs" aria-label="Trade price chart range">
+                  <button class="range-button" type="button" data-range="1H">1H</button>
+                  <button class="range-button active" type="button" data-range="1D">1D</button>
+                  <button class="range-button" type="button" data-range="1W">1W</button>
+                  <button class="range-button" type="button" data-range="1M">1M</button>
+                  <button class="range-button" type="button" data-range="3M">3M</button>
+                  <button class="range-button" type="button" data-range="1Y">1Y</button>
+                </div>
                 <div class="chart-wrap">
                   <canvas id="tradeLineChart" width="900" height="330" aria-label="Selected market price graph"></canvas>
                 </div>
@@ -280,6 +296,14 @@
                     <span class="status-pill compact">OHLC</span>
                     <button class="chart-expand-button" type="button" data-expand-chart="candle">Wide view</button>
                   </div>
+                </div>
+                <div class="timeframe-tabs" aria-label="Candlestick chart range">
+                  <button class="range-button" type="button" data-range="1H">1H</button>
+                  <button class="range-button active" type="button" data-range="1D">1D</button>
+                  <button class="range-button" type="button" data-range="1W">1W</button>
+                  <button class="range-button" type="button" data-range="1M">1M</button>
+                  <button class="range-button" type="button" data-range="3M">3M</button>
+                  <button class="range-button" type="button" data-range="1Y">1Y</button>
                 </div>
                 <div class="chart-wrap">
                   <canvas id="tradeCandleChart" width="900" height="330" aria-label="Selected market candlestick chart"></canvas>
@@ -394,13 +418,10 @@
         <section id="developerView" class="view">
           <article class="developer-profile">
             <div class="developer-photo-wrap">
-              <div class="developer-avatar-fallback" aria-hidden="true">SP</div>
-              <img
-                id="developerPhoto"
-                class="developer-photo"
-                src="https://github.com/Sahilpreetsinghvirdi.png?size=260"
-                alt="Sahil Preet Singh GitHub profile"
-              />
+              <button id="developerAvatarAccess" class="developer-avatar-access" type="button" aria-label="Enter password to view developer GitHub">
+                <span class="developer-avatar-monogram" aria-hidden="true">SP</span>
+                <span class="developer-avatar-access-text">Enter password<br />to view</span>
+              </button>
             </div>
             <div class="developer-copy">
               <p class="eyebrow">Developer Profile</p>
@@ -491,6 +512,14 @@
           </div>
           <button id="expandedChartClose" class="ghost-button" type="button">Close</button>
         </header>
+        <div class="timeframe-tabs expanded-timeframe-tabs" aria-label="Expanded chart range">
+          <button class="range-button" type="button" data-range="1H">1H</button>
+          <button class="range-button active" type="button" data-range="1D">1D</button>
+          <button class="range-button" type="button" data-range="1W">1W</button>
+          <button class="range-button" type="button" data-range="1M">1M</button>
+          <button class="range-button" type="button" data-range="3M">3M</button>
+          <button class="range-button" type="button" data-range="1Y">1Y</button>
+        </div>
         <div class="expanded-chart-wrap">
           <canvas id="expandedChartCanvas" width="1400" height="640" aria-label="Expanded selected market chart"></canvas>
         </div>
